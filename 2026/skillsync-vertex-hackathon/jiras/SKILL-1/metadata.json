@@ -1,0 +1,23 @@
+{
+  "story_id": "SKILL-1",
+  "title": "Foundation: synthetic data, trust-state persistence & the Claude intelligence boundary",
+  "epic": "EPIC-1",
+  "roadmap_phase": "Phase 1 (Foundation)",
+  "story_points": 8,
+  "t_shirt": "L",
+  "priority": "Highest",
+  "status": "Backlog",
+  "blocks": ["SKILL-2", "SKILL-3", "SKILL-5", "SKILL-6"],
+  "blocked_by": [],
+  "acs": ["AC-13", "AC-16"],
+  "business_rules": ["BR-09", "BR-10", "BR-12", "BR-16", "BR-18", "BR-19"],
+  "target_repositories": [
+    {
+      "name": "ai-nu-skillsync",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+      "branch": null,
+      "url": "LOCAL-ONLY"
+    }
+  ],
+  "created_at": "2026-06-05T00:00:00Z"
+}

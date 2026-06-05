@@ -1,0 +1,23 @@
+{
+  "story_id": "SKILL-3",
+  "title": "Staffing Matcher: availability-aware ranked shortlist",
+  "epic": "EPIC-1",
+  "roadmap_phase": "Phase 3 (Staffing Matcher)",
+  "story_points": 5,
+  "t_shirt": "L",
+  "priority": "Highest",
+  "status": "Backlog",
+  "blocks": ["SKILL-4"],
+  "blocked_by": ["SKILL-1"],
+  "acs": ["AC-04", "AC-05", "AC-06", "AC-21"],
+  "business_rules": ["BR-03", "BR-04", "BR-05", "BR-09", "BR-12"],
+  "target_repositories": [
+    {
+      "name": "ai-nu-skillsync",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+      "branch": null,
+      "url": "LOCAL-ONLY"
+    }
+  ],
+  "created_at": "2026-06-05T00:00:00Z"
+}

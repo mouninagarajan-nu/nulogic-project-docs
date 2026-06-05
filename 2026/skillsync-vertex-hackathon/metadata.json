@@ -3,8 +3,8 @@
   "initiative_name": "skillsync-vertex-hackathon",
   "one_pager_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/docs/SPEC.md",
   "created_at": "2026-06-05T00:00:00Z",
-  "current_stage": 4,
-  "phase": "initiative",
+  "current_stage": 5,
+  "phase": "per-jira",
   "local_only": true,
   "stages": {
     "1a": {"status": "completed", "agent": "nulogic-prd-creator", "iterations": 3},
@@ -16,12 +16,19 @@
     "3a-review": {"status": "skipped", "agent": "nulogic-arch-reviewer", "scope": "current-state", "reason": "tighter cadence per user; greenfield low risk"},
     "3b": {"status": "completed", "agent": "nulogic-arch-target-state-creator", "iterations": 2, "note": "8-phase roadmap, 7 ADRs, 4 review findings resolved"},
     "3b-review": {"status": "completed", "agent": "nulogic-arch-reviewer", "scope": "target-state", "note": "0 RED 4 YELLOW resolved; council soft-flag Auth.js"},
-    "4a": {"status": "pending", "agent": "nulogic-jira-creator"},
-    "4b": {"status": "pending", "agent": "nulogic-jira-reviewer"},
+    "4a": {"status": "completed", "agent": "nulogic-jira-creator", "note": "6 stories (SKILL-1..6), 18 sub-tasks, 3 epics, local_only; completed across two runs (first timed out after SKILL-1..3)"},
+    "4b": {"status": "completed", "agent": "nulogic-jira-reviewer", "note": "success; 27/27 ACs, 23/23 BRs; 2 findings (F-001 sizing advisory accepted as intentional 6-story structure, F-002 cosmetic); next_stage_ready=true"},
     "4c": {"status": "pending", "agent": "nulogic-qe-testcases-generator", "optional": true, "mandatory_prompt": true}
   },
   "review_overrides": {},
   "blocking_conditions": [],
-  "jiras_created": [],
+  "jiras_created": [
+    {"id": "SKILL-1", "title": "Foundation: synthetic data, trust-state persistence & the Claude intelligence boundary", "epic": "EPIC-1", "story_points": 8, "blocks": ["SKILL-2","SKILL-3","SKILL-4","SKILL-5","SKILL-6"], "blocked_by": []},
+    {"id": "SKILL-2", "title": "Certificate parsing -> verified skills (the innovation hero)", "epic": "EPIC-1", "story_points": 5, "blocks": ["SKILL-4"], "blocked_by": ["SKILL-1"]},
+    {"id": "SKILL-3", "title": "Staffing Matcher: availability-aware ranked shortlist", "epic": "EPIC-1", "story_points": 5, "blocks": ["SKILL-4"], "blocked_by": ["SKILL-1"]},
+    {"id": "SKILL-4", "title": "The Hero Loop + Catalog Intelligence", "epic": "EPIC-1", "story_points": 8, "blocks": [], "blocked_by": ["SKILL-1","SKILL-2","SKILL-3"]},
+    {"id": "SKILL-5", "title": "Profile Spine: baseline skills, self-service, manager approval & resume extraction", "epic": "EPIC-2", "story_points": 8, "blocks": ["SKILL-6"], "blocked_by": ["SKILL-1"]},
+    {"id": "SKILL-6", "title": "Auth, Roles, Progress Summary & NULogic UI", "epic": "EPIC-3", "story_points": 8, "blocks": [], "blocked_by": ["SKILL-1","SKILL-5"]}
+  ],
   "artifact_versions": {"prd": "v1", "acceptance-criteria": "v1", "scope-boundary": "v1", "business-rules": "v1", "repository-discovery": "v1"}
 }
