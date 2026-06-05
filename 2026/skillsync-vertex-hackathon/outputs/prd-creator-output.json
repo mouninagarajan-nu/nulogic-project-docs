@@ -1,0 +1,148 @@
+{
+  "initiative_id": "skillsync-vertex-hackathon",
+  "mode": "update",
+  "status": "success",
+  "next_stage_ready": true,
+  "stage": "prd-creation",
+  "artifact_folder": "artifacts/01-intent",
+  "source_one_pager": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/docs/SPEC.md",
+  "update_reason": "Iteration 3: resolved reviewer findings PRD-R2-001..003 in place (.v1 filenames retained) — added a validating AC for BR-11 (plan must have >=2-3 items incl. >=1 AI-enabled) the §8 compliance metric depends on, the plan-selection enforcement/error journey + remove-swap flow, and specified+tested the optional manager 'endorsed' catalog flag. (Iteration 2) resolved PRD-R1-001..007 in place. (Prior) Product owner approved v1 at the gate and introduced 5 new MVP requirements: real Google OAuth (NULogic-restricted) replacing fake-auth-only, baseline current-skill capture, employee self-service skill management, manager approval workflow, and resume upload + Claude extraction.",
+  "revision_iteration": 3,
+  "reviewer_findings_resolved_iteration3": [
+    { "id": "PRD-R2-001", "severity": "high", "resolution": "Added AC-26 (P1) validating BR-11: a conforming upskilling plan (>=2 items incl. >=1 AI-enabled) is accepted and counts toward the §8 compliance metric; a non-conforming plan is rejected with a specific message and not marked complete; remove/swap-to-conformance covered. AI-enabled reuses the catalog Claude tag (BR-07). Added a coverage_matrix row mapping BR-11 -> AC-26. Clarified BR-11 Impact to reference AC-26 and the enforcement flow." },
+    { "id": "PRD-R2-002", "severity": "medium", "resolution": "Documented the plan-validation user journey in PRD §3 UC-1 (explicit rule, user-facing rejection messages for <2 items and 0 AI-enabled, and a remove/swap-item path), and mirrored it as a new §10 Error-Handling 'Plan selection (UC-1)' row plus a §10 edge case." },
+    { "id": "PRD-R2-003", "severity": "low", "resolution": "Specified the optional manager 'endorsed' catalog flag (kept in-scope): manager/HR/Admin may set/unset it, non-managers are denied, endorsed items are surfaced/indicated in catalog + recommendations; flag-only (no workflow). Added BR-22 + AC-27 (P2) + coverage_matrix row; clarified PRD UC-5, §10, scope-boundary In-Scope/quality-gates and reaffirmed endorsement workflows remain OUT." }
+  ],
+  "reviewer_findings_resolved": [
+    { "id": "PRD-R1-001", "severity": "high", "resolution": "Defined single-identity skill model: one canonical record per profile, trust state PROMOTES in place (self-reported -> manager-approved -> verified), never duplicates the row; re-asserting/approving/cert-verifying promotes the same record. Hero loop before/after compares the same promoted record. Added BR-18, AC-22; tightened AC-07, BR-15, PRD §4/UC-3." },
+    { "id": "PRD-R1-002", "severity": "high", "resolution": "Specified deterministic OAuth-identity -> synthetic-profile mapping via a seeded table keyed by a synthetic handle (NOT real email/PII); same identity resolves to same synthetic profile every time, making AC-14 deterministically testable. Real email used only transiently for hosted-domain check, never stored. Added BR-13a; tightened AC-14, PRD UC-6." },
+    { "id": "PRD-R1-003", "severity": "medium", "resolution": "Added session-expiry / re-auth-mid-flow handling: expired session redirects to sign-in, in-flight unsaved work handled gracefully, no protected data on stale session. Added BR-20, AC-24, PRD UC-6b + NFR + error-handling row." },
+    { "id": "PRD-R1-004", "severity": "medium", "resolution": "Defined idempotent / de-duplicated double-submit handling for cert AND resume uploads (no duplicate skill records / promotions / pre-populations). Added BR-19, AC-23, PRD NFR + error-handling/edge-case + UC notes." },
+    { "id": "PRD-R1-005", "severity": "medium", "resolution": "Admin role management made explicit: minimal in-scope (Admin assigns/overrides a user's role); broader config explicitly deferred to roadmap in scope-boundary. Added BR-21, AC-25, UC-10, persona update." },
+    { "id": "PRD-R1-006", "severity": "medium", "resolution": "Added partial-quantity staffing fulfillment: when fewer than the requested count qualify, return those that do with a clear shortfall note (not zero-fit). Added AC-21 + PRD error-handling row + edge case." },
+    { "id": "PRD-R1-007", "severity": "low", "resolution": "Added a resume-parse success metric to PRD §8 success-metrics for symmetry with the cert-parse metric." }
+  ],
+  "auth_override_noted": true,
+  "auth_override": {
+    "summary": "Real Google OAuth (hosted-domain restricted to nulogic.io) is now in scope and supersedes the fake-auth-only stance.",
+    "supersedes": ["SPEC.md §2 (non-goals)", "SPEC.md §8", "CLAUDE.md domain note: 'fake auth with a role/view switcher — do not build real auth'"],
+    "noted_in": ["prd.v1.md (override notice + solution + dependencies + NFRs)", "scope-boundary.v1.md (override notice + In-Scope + Out-of-Scope moved)", "business-rules.v1.md (BR-13)", "acceptance-criteria.v1.json (AC-14/AC-15 + notes)"],
+    "role_hierarchy_retained": true,
+    "view_switcher_status": "retained as demo/testing aid only; no longer the auth mechanism",
+    "no_real_pii_committed": true
+  },
+  "artifacts": [
+    {
+      "type": "prd",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/prd.v1.md"
+    },
+    {
+      "type": "acceptance-criteria",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/acceptance-criteria.v1.json"
+    },
+    {
+      "type": "scope-boundary",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/scope-boundary.v1.md"
+    },
+    {
+      "type": "business-rules",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/business-rules.v1.md"
+    },
+    {
+      "type": "repository-discovery",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/repository-discovery.v1.json"
+    }
+  ],
+  "changes": [
+    "ITERATION 3 — acceptance-criteria.v1.json: appended AC-26 (plan-validation gate for BR-11: >=2-3 items incl. >=1 AI-enabled, non-conforming rejection + remove/swap) and AC-27 (manager 'endorsed' catalog flag set/unset + surfacing, non-manager denied); added coverage_matrix rows for BR-11->AC-26 and the endorsed flag (BR-22)->AC-27; refreshed notes.",
+    "ITERATION 3 — business-rules.v1.md: clarified BR-11 Impact (validated by AC-26 + plan-validation flow); appended BR-22 (manager 'endorsed' catalog flag, flag-only); added iteration-3 revision note.",
+    "ITERATION 3 — prd.v1.md: added iteration-3 revision notice; added the plan-validation flow + error messages + remove/swap path to UC-1; clarified UC-5 manager 'endorsed' flag behavior; added §10 error-handling rows (Plan selection, endorsed-flag note) + edge cases; updated §5 AC summary; tied §8 compliance metric to the BR-11/AC-26 gate.",
+    "ITERATION 3 — scope-boundary.v1.md: added iteration-3 notice (no scope moved in/out); clarified endorsed flag is flag-only (set/unset by managers, surfaced) and tested; added plan-finalize validation to Upskilling Tracker feature + quality gates; reaffirmed endorsement workflows OUT.",
+    "ITERATION 3 — repository-discovery.v1.json: unchanged (no new repos).",
+    "ITERATION 2 — prd.v1.md: added iteration-2 revision notice; tightened §4 trust model (single canonical record + promotion) and UC-3 hero loop (same promoted record); added UC-6b (session expiry), UC-10 (Admin role assignment); updated UC-6 (deterministic synthetic-handle mapping), Admin persona; added §8 resume-parse success metric; added NFR rows (single-identity/idempotency data integrity, auth resilience); added error-handling rows (session expiry, partial-quantity, duplicate upload, admin role) and edge cases.",
+    "ITERATION 2 — acceptance-criteria.v1.json: tightened AC-07 (promote same record) and AC-14 (deterministic synthetic-handle mapping); appended AC-21 (partial-quantity), AC-22 (single skill identity/promotion), AC-23 (idempotent cert+resume uploads), AC-24 (session expiry/re-auth), AC-25 (Admin role assign); refreshed notes + coverage_matrix.",
+    "ITERATION 2 — scope-boundary.v1.md: added iteration-2 notice; In-Scope: single-record skill-identity/promotion, deterministic identity mapping, session-expiry handling, upload idempotency, Admin role-assignment (minimal); Out-of-Scope: explicitly deferred broader Admin config + session-management hardening.",
+    "ITERATION 2 — business-rules.v1.md: refined BR-15 (reference single-identity rule); appended BR-13a (deterministic synthetic-handle mapping), BR-18 (one canonical skill identity + promotion), BR-19 (idempotent uploads), BR-20 (session expiry/re-auth), BR-21 (Admin role assignment).",
+    "ITERATION 2 — repository-discovery.v1.json: unchanged (no new repos; new requirements land in the same single app repo).",
+    "(Prior, post-gate) prd.v1.md: added auth-override notice; added UC-6..UC-9; updated personas, proposed-solution guardrails, scope summary, dependencies, NFRs, error-handling.",
+    "(Prior, post-gate) acceptance-criteria.v1.json: appended AC-14..AC-20; updated AC-11.",
+    "(Prior, post-gate) scope-boundary.v1.md: moved real authentication In-Scope (Google OAuth); added baseline-skills, self-service, manager-approval, resume-parsing.",
+    "(Prior, post-gate) business-rules.v1.md: updated BR-01/BR-03; appended BR-13..BR-17."
+  ],
+  "requires_rework": [
+    "acceptance-test-creation",
+    "architecture-design"
+  ],
+  "requires_rework_reason": "Iteration 3 adds ACs (AC-26 plan-validation gate, AC-27 manager 'endorsed' flag) and BR-22, and clarifies BR-11 enforcement. Iteration 2 added ACs (AC-21..AC-25) and BRs (BR-13a, BR-18..BR-21) covering single-record skill identity/promotion, deterministic identity mapping, session expiry, upload idempotency, and minimal Admin role management — plus the prior AC-14..AC-20 / BR-13..BR-17 (real auth, skill state machine, resume parsing). Downstream acceptance-test and architecture stages must incorporate them. Repo discovery set is unchanged.",
+  "repository_discovery_results": {
+    "greenfield": true,
+    "remote_discovery_performed": false,
+    "total_repositories": 1,
+    "primary_repository": "ai-nu-skillsync",
+    "discovery_changed": false,
+    "repositories": [
+      {
+        "name": "ai-nu-skillsync",
+        "org": "nulogic (Team Vertex)",
+        "category": "application",
+        "relevance": "primary",
+        "priority": "P0",
+        "local_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync"
+      }
+    ]
+  },
+  "summary_counts": {
+    "acceptance_criteria": 27,
+    "new_acceptance_criteria_iteration3": 2,
+    "new_acceptance_criteria_iteration2": 5,
+    "p0_acceptance_criteria": 8,
+    "business_rules": 23,
+    "new_business_rules_iteration3": 1,
+    "new_business_rules_iteration2": 5,
+    "scope_in_themes": 14,
+    "scope_out_items": 12,
+    "repositories": 1
+  },
+  "new_ac_ids_iteration3": ["AC-26", "AC-27"],
+  "new_br_ids_iteration3": ["BR-22"],
+  "new_ac_ids_iteration2": ["AC-21", "AC-22", "AC-23", "AC-24", "AC-25"],
+  "new_br_ids_iteration2": ["BR-13a", "BR-18", "BR-19", "BR-20", "BR-21"],
+  "new_ac_ids": ["AC-14", "AC-15", "AC-16", "AC-17", "AC-18", "AC-19", "AC-20"],
+  "new_br_ids": ["BR-13", "BR-14", "BR-15", "BR-16", "BR-17"],
+  "gates_skipped_reason": "Orchestrator directive (UPDATE iteration): AskUserQuestion gates skipped; artifacts updated in place as approved-and-extended drafts for orchestrator-mediated review.",
+  "metadata": {
+    "agent": "nulogic-prd-creator",
+    "created_date": "2026-06-05",
+    "updated_date": "2026-06-05",
+    "revision_iteration": 3,
+    "config_version": "1.0.0",
+    "context_artifacts_read": [
+      "prd.v1.md",
+      "acceptance-criteria.v1.json",
+      "scope-boundary.v1.md",
+      "business-rules.v1.md",
+      "repository-discovery.v1.json"
+    ],
+    "domain_constraints_reflected": [
+      "synthetic-data-only-no-PII (incl. authenticated real Google users map to synthetic profiles via synthetic-handle mapping; real email never stored)",
+      "all-intelligence-via-claude-api (incl. resume parsing and semantic skill de-dupe)",
+      "real-google-oauth-nulogic-restricted (supersedes fake-auth-only)",
+      "deterministic-identity-to-synthetic-profile-mapping (seeded, synthetic-handle keyed)",
+      "session-expiry-redirect-and-graceful-re-auth",
+      "role-hierarchy-layered-on-authenticated-identity",
+      "admin-minimal-role-assignment-in-scope-broader-config-deferred",
+      "one-canonical-skill-record-per-profile-trust-state-promotes-in-place",
+      "skill-trust-state-machine-self-reported-manager-approved-verified",
+      "idempotent-de-duped-cert-and-resume-uploads",
+      "partial-quantity-staffing-fulfillment",
+      "baseline-vs-upskilling-acquired-skills",
+      "upskilling-plan-validation-gate-min-2-3-items-incl-1-ai-enabled (BR-11/AC-26; §8 compliance metric depends on it)",
+      "manager-endorsed-catalog-flag-flag-only-no-workflow (BR-22/AC-27)",
+      "availability-aware-matching",
+      "zod-validation-before-writes-graceful-failure",
+      "protect-the-hero-loop",
+      "single-greenfield-app-repo"
+    ],
+    "figma_status": "UX designs in progress — none provided at PRD time; not a blocker."
+  }
+}

@@ -3,12 +3,12 @@
   "initiative_name": "skillsync-vertex-hackathon",
   "one_pager_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/docs/SPEC.md",
   "created_at": "2026-06-05T00:00:00Z",
-  "current_stage": 1,
+  "current_stage": 2,
   "phase": "initiative",
   "local_only": true,
   "stages": {
-    "1a": {"status": "pending", "agent": "nulogic-prd-creator"},
-    "1b": {"status": "pending", "agent": "nulogic-prd-reviewer"},
+    "1a": {"status": "completed", "agent": "nulogic-prd-creator", "iterations": 3},
+    "1b": {"status": "completed", "agent": "nulogic-prd-reviewer", "convergence": "max_iterations_reached_doer_resolved", "note": "iter3 reviewer re-run skipped per user; doer reported all findings resolved + next_stage_ready"},
     "2a": {"status": "pending", "agent": "nulogic-acceptance-test-creator"},
     "2b": {"status": "pending", "agent": "nulogic-acceptance-test-reviewer"},
     "2c": {"status": "pending", "agent": "nulogic-qe-testplan-generator", "optional": true, "mandatory_prompt": true},
@@ -23,5 +23,5 @@
   "review_overrides": {},
   "blocking_conditions": [],
   "jiras_created": [],
-  "artifact_versions": {}
+  "artifact_versions": {"prd": "v1", "acceptance-criteria": "v1", "scope-boundary": "v1", "business-rules": "v1", "repository-discovery": "v1"}
 }
