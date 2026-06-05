@@ -18,7 +18,7 @@
     "3b-review": {"status": "completed", "agent": "nulogic-arch-reviewer", "scope": "target-state", "note": "0 RED 4 YELLOW resolved; council soft-flag Auth.js"},
     "4a": {"status": "completed", "agent": "nulogic-jira-creator", "note": "6 stories (SKILL-1..6), 18 sub-tasks, 3 epics, local_only; completed across two runs (first timed out after SKILL-1..3)"},
     "4b": {"status": "completed", "agent": "nulogic-jira-reviewer", "note": "success; 27/27 ACs, 23/23 BRs; 2 findings (F-001 sizing advisory accepted as intentional 6-story structure, F-002 cosmetic); next_stage_ready=true"},
-    "4c": {"status": "pending", "agent": "nulogic-qe-testcases-generator", "optional": true, "mandatory_prompt": true}
+    "4c": {"status": "skipped", "agent": "nulogic-qe-testcases-generator", "reason": "user_declined (testrail disabled)"}
   },
   "review_overrides": {},
   "blocking_conditions": [],
