@@ -243,7 +243,8 @@ Each call logs `requestId`, `promptName`, `model`, `cacheRead/cacheWrite` token 
 | `assignRole` | Role Admin | Admin only | `{userId, role}` → `{user}` | Only Admin management capability (AC-25/BR-21); re-scopes target's access |
 | `confirmCertExtraction` | Upload | Own profile | `{uploadId, confirmedSkills[]}` → `{promotedSkills[]}` | Persists only after user confirm; upsert+promote to `verified` (AC-01/22) |
 | `confirmResumeExtraction` | Upload | Own profile | `{uploadId, confirmedFields}` → `{profile}` | Pre-populate; baseline skills `self-reported` (AC-19); idempotent (AC-23) |
-| `runMatch` | Matching | Manager/HR/PL (PL=team) | `{queryText}` → `MatchResult` | **May be an action or a handler**; Opus ranking; cached dataset; graceful failure (AC-04/06/21) |
+
+> **`runMatch` is NOT in this table — a staffing search is a READ, not a mutation (TS-003).** It is specified as a **read-only Route Handler** in §3.2a, not a Server Action. See that section for transport, caching, and rationale.
 
 > **Server Action discipline:** every action **re-derives the session and role server-side** (never trusts a client-sent role), awaits `cookies()`, and on a stale session returns a redirect-to-sign-in (composed with `proxy.ts`, AC-24).
 
@@ -256,6 +257,22 @@ Each call logs `requestId`, `promptName`, `model`, `cacheRead/cacheWrite` token 
 | `/api/uploads/resume` | POST (multipart) | Receive resume file → orchestrate parse | Same idempotency guard; returns `{uploadId, extracted}` |
 
 > File uploads are Route Handlers (not Server Actions) so multipart streaming + size limits are handled at the request edge; the parse → Zod → **confirm** → persist split keeps "never write garbage on failure" (P2) and idempotency (BR-19) explicit.
+
+### 3.2a `runMatch` — read transport (NOT a mutation) (TS-003)
+
+A staffing search **reads** the profile dataset and returns a ranked shortlist; it **writes nothing**. It is therefore specified as a **read-oriented Route Handler**, not a Server Action, resolving the earlier "may be an action or a handler" ambiguity.
+
+| Handler | Method | Module | Auth scope | Input → Output | Key rules |
+|---|---|---|---|---|---|
+| `/api/match` | **POST** (read-only; query in body) | Matching | Manager/HR/PL (PL=team); Employee denied | `{queryText}` → `MatchResult` | Opus ranking; cached dataset; **no DB writes**; graceful failure (AC-04/06/21) |
+
+**Why POST-as-read, not GET, and not a Server Action:**
+- **Not a Server Action** — Server Actions are the mutation convention (they post to the page, integrate with form/optimistic-UI revalidation, and signal *write* intent). `runMatch` mutates nothing, so modeling it as a mutation is semantically wrong and muddies caching/idempotency reasoning (the finding). A read-oriented handler keeps reads and writes cleanly separated (P9).
+- **POST over GET** — the free-text `queryText` (and any candidate filters) can be long and is more naturally carried in a request body than a URL; the call is **safe and idempotent** regardless (re-running the same query returns the same ranking and changes no state), so it satisfies read semantics without abusing GET length limits. A GET variant with the query in the querystring is an acceptable equivalent; the binding decision is **read-only handler, not mutation**.
+- **Caching** — the handler builds the role-scoped dataset deterministically and calls Claude with the **cached system prompt + serialized dataset** (§2.3). Because it is a pure read, the loop's before/after re-run is just two reads over a dataset that changed by exactly one promoted record — no mutation/idempotency concerns on the search itself.
+- **Auth scope** — the handler re-derives session + role server-side (same discipline as actions); Employees are denied (BR-03/AC-11), PL is scoped to their team.
+
+> The Matching service module (§4.2) is unchanged; only the **transport** is pinned: a read-only handler, never a mutation.
 
 ### 3.3 Session gate — `proxy.ts` (P6/P9 — was "middleware" pre-Next-16)
 
@@ -307,13 +324,18 @@ sequenceDiagram
             Z-->>RH: CertParseResult
             RH-->>EMP: show extracted skills to confirm
             EMP->>SA: confirmCertExtraction(uploadId, skills)
-            SA->>AISVC: skill-identity (semantic de-dupe vs existing) 
-            SA->>REPO: UPSERT (profileId, canonicalSkillId) → PROMOTE to verified
+            SA->>REPO: resolveCanonicalSkill → UPSERT (profileId, canonicalSkillId) → PROMOTE to verified
+            Note over SA,REPO: Layer 1 deterministic canonicalKey resolves the row;<br/>Claude skill-identity (Layer 2) only advises merges
+            alt skill-identity de-dupe fails/unreachable (TS-002)
+                Note over REPO: FALLBACK — persist via deterministic canonicalKey,<br/>create-new + reconcilePending; write NEVER blocked/corrupted
+            end
             Note over REPO: same record promoted, never a duplicate (BR-18/AC-22)
             REPO-->>EMP: item=done; profile carries verified skill
         end
     end
 ```
+
+> **De-dupe failure must not break the P0 write (TS-002).** The skill-identity Claude call is a **merge *advisor*, not a gate** on this most-protected step. `confirmCertExtraction` resolves the persistence key via the **deterministic `canonicalKey`** (Page 03 §3.4 Layer 1) — which never depends on a model call — and only consults Claude `skill-identity` (Layer 2) to merge harder semantic aliases. If that call fails, times out, or returns invalid JSON, the write **falls back to create-new keyed by `canonicalKey` with a `reconcilePending` flag** and the cert still promotes to `verified`. Consequences: the verified write always completes (no hang, no error after a successful parse+confirm), the row is never corrupted, and the only downside is a possibly-redundant Skill row resolved by a later reconcile pass — degraded de-dupe quality, never broken loop correctness. The `@unique` `canonicalKey` (Page 03 §4.2) keeps the fallback create-new single-record even under concurrency.
 
 ### 4.2 Availability-aware staffing match (UC-2 · AC-04/05/06/21)
 
@@ -424,7 +446,8 @@ The mapping is keyed by a **synthetic handle** (e.g. a hash/opaque key derived f
 |---|---|---|
 | **Authorization** | Role + ownership re-derived server-side in every action/read; PL scoped to team; Employee blocked from matcher | BR-03, AC-11, AC-18, AC-25 |
 | **Validation** | Zod `safeParse` at every Claude boundary AND for user input (blank-skill reject) | P2, AC-03/17/20 |
-| **Idempotency** | Content-hash guard on uploads + `(profileId, canonicalSkillId)` upsert | BR-19, AC-23 |
+| **Idempotency** | **DB-enforced** `@@unique([employeeId, contentHash])` on Certificate/Resume (app-layer guard is the fast path, the constraint is the race-safe backstop) + `(profileId, canonicalSkillId)` skill upsert | BR-19, AC-23, TS-004 |
+| **Claude de-dupe resilience** | skill-identity is a merge *advisor*, not a write gate; on failure fall back to deterministic `canonicalKey` create-new + reconcile-later — the P0 cert-confirm write never blocks/corrupts | TS-002, AC-22 |
 | **Error UX** | Each Claude flow returns a typed failure → spec'd user message; never a crash | NFR Resilience, §10 PRD table |
 | **Secrets** | `ANTHROPIC_API_KEY`, Google client id/secret, auth secret from env; `.env.example` placeholders only | P3, AC-13 |
 | **No-PII** | Synthetic-handle mapping; discard real email; logs carry only synthetic ids | P3, AC-13/14 |
@@ -451,6 +474,6 @@ The mapping is keyed by a **synthetic handle** (e.g. a hash/opaque key derived f
 
 ## 7. Cross-References
 - **Page 01** — system overview, principles P1–P9, the loop.
-- **Page 03** — Prisma schema backing every contract here (skill upsert key, catalog flags, plan, resume, identity-mapping table).
+- **Page 03** — Prisma schema backing every contract here: the `Skill.canonicalKey @unique` + `EmployeeSkill @@unique` pair (BR-18 single-record, TS-001), the canonical-resolution + de-dupe-failure fallback (§3.4, TS-002), the `@@unique([employeeId, contentHash])` upload idempotency (TS-004), catalog flags, plan, resume, identity-mapping table.
 - **Page 04** — phasing, per-AC traceability, risks.
 - **Page 05** — ADRs: auth library (ADR-001), persistence (ADR-002), Claude call patterns + validation + caching (ADR-003), file/upload handling (ADR-004), synthetic-data (ADR-005), single-app shape (ADR-006).

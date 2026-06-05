@@ -111,12 +111,12 @@
 
 **Context.** Certificates and resumes (PDF/doc/image) are uploaded and parsed by Claude (UC-1, UC-9). Constraints: never write on parse failure (BR-02/BR-17), **idempotent double-submit** (BR-19, AC-23), confirm-before-write (employee reviews extraction), and demo-only file storage (file-storage hardening explicitly out of scope). No upload handling exists today (TD-CERT-01, TD-RESUME-01, TD-DATA-05).
 
-**Decision.** Handle uploads via **Route Handlers** (`/api/uploads/certificate`, `/api/uploads/resume`) using multipart. Compute a **content hash** per file; key idempotency on `(employeeId, contentHash)` so a re-submit returns the prior result without re-parsing (AC-23). Run **parse → Zod-validate → return extraction for user confirm → persist on confirm**. Store the file reference + `parsedJson` in `Certificate`/`Resume`; uploaded bytes live in demo-local storage only. Guard the submit affordance against double-click in the client (BR-19).
+**Decision.** Handle uploads via **Route Handlers** (`/api/uploads/certificate`, `/api/uploads/resume`) using multipart. Compute a **content hash** per file and enforce idempotency with a **DB-level `@@unique([employeeId, contentHash])`** on both `Certificate` and `Resume` (TS-004) — the app-layer "seen before?" check is the fast path, the unique constraint is the **race-safe backstop** so a genuine concurrent double-submit cannot create a duplicate (AC-23). A re-submit returns the prior result without re-parsing. Run **parse → Zod-validate → return extraction for user confirm → persist on confirm**. Store the file reference + `parsedJson` in `Certificate`/`Resume`; uploaded bytes live in demo-local storage only. Guard the submit affordance against double-click in the client (BR-19).
 
 **Rationale.**
 - Route Handlers (not Server Actions) are the right place for multipart streaming + size limits at the request edge (P9).
 - The **parse→confirm→write** split makes "never write garbage" (P2) explicit and gives the employee the confirmation step the AC require (AC-01/19).
-- Content-hash idempotency keeps the **loop's before/after comparison clean** — a double-submit can't create a duplicate promotion (P5).
+- **DB-level** content-hash uniqueness keeps the **loop's before/after comparison clean** — a double-submit (even concurrent) can't create a duplicate Certificate/Resume and therefore can't create a duplicate promotion (P5). Relying on an app-layer check alone is racy; the constraint matches the rigor of the BR-18 key (TS-004).
 
 **Alternatives Considered.**
 - **Server Action with `FormData`:** viable for small files but mixes file edge concerns with mutations; the handler split is cleaner and keeps idempotency/streaming explicit; chosen handlers instead.
@@ -127,7 +127,7 @@
 - *Gain:* clean failure handling, idempotency, confirm step, loop integrity.
 - *Give up:* durable/secure file storage (intentionally out of scope).
 
-**Impact.** *Technical:* two Route Handlers, hash util, `contentHash` columns (Page 03). *Risk:* low; the confirm step + hash guard are the integrity backbone of the loop.
+**Impact.** *Technical:* two Route Handlers, hash util, `contentHash` columns with `@@unique([employeeId, contentHash])` (Page 03). *Risk:* low; the confirm step + DB-enforced hash uniqueness are the integrity backbone of the loop.
 
 **Evidence.** PRD §UC-1/UC-9/§10; BR-02/17/19; AC-01/03/19/20/23; current-state TD-CERT-01/RESUME-01/DATA-05; Next.js 16 route handler conventions (`route.md`).
 
@@ -167,11 +167,11 @@
 
 **Context.** SkillSync is one app over one data store with one consumer (the browser). The team is small, the timeline is a hackathon, and the loop must be trivially demoable. Next.js 16 has breaking changes vs training-data assumptions (CLAUDE.md / AGENTS.md), verified in `node_modules/next/dist/docs/`.
 
-**Decision.** Build a **single Next.js 16 App Router (RSC) application** — no microservices, no separate API tier, no message bus. Use **Server Actions** for mutations, **Route Handlers** for uploads + the OAuth callback, **RSC** for role-scoped reads, and **`proxy.ts`** for the session gate. Treat the Next.js 16 facts as binding: `middleware`→`proxy.ts`; `cookies()`/`headers()`/`params`/`searchParams` are **async-only**; Turbopack default; Node 20.9+, React 19.2.
+**Decision.** Build a **single Next.js 16 App Router (RSC) application** — no microservices, no separate API tier, no message bus. Use **Server Actions for mutations only**, **Route Handlers** for uploads + the OAuth callback, **RSC** for role-scoped reads, and **`proxy.ts`** for the session gate. **Reads are not Server Actions:** the staffing search `runMatch` — a P0 read that writes nothing — is a **read-only Route Handler** (`POST /api/match`, query in body), not a mutation (TS-003); this keeps reads/writes cleanly separated and removes the earlier "action or handler" ambiguity, which had clouded caching/idempotency reasoning. Treat the Next.js 16 facts as binding: `middleware`→`proxy.ts`; `cookies()`/`headers()`/`params`/`searchParams` are **async-only**; Turbopack default; Node 20.9+, React 19.2.
 
 **Rationale.**
 - One app = one deployable, one mental model, fastest path to a working loop (P8).
-- Server Actions + Route Handlers cover every mutation/upload need without a bespoke API layer.
+- Server Actions + Route Handlers cover every mutation/upload/read need without a bespoke API layer — mutations as actions, uploads + the read-only staffing search as handlers (TS-003).
 - Honoring the Next.js 16 conventions prevents the most likely build breakage (training-data drift, P9).
 
 **Alternatives Considered.**
@@ -194,7 +194,7 @@
 
 **Context.** The hero loop's before/after comparison must operate on the **same** skill record: a cert upload promotes that record's trust state (raising matching weight), and a duplicated row would be the failure signature (BR-18, AC-07/22). Self-service add, manager approval, resume extraction, and cert verification all touch skills. The starter `EmployeeSkill` has only a flat `source` string and a `@@unique([employeeId, skillId])` key (verified, lines 49–60).
 
-**Decision.** Model skill trust as a **single `trustState` field** on one `EmployeeSkill` row, written exclusively through an **upsert keyed by `(profileId, canonicalSkillId)`** with **monotonic promotion** (`self-reported → manager-approved → verified`; never demote, never duplicate). Skill identity for "is this the same skill?" is resolved by a **Claude `skill-identity` call** (BR-18/BR-06 discipline), not string equality. Re-assert at equal/lower trust is a no-op.
+**Decision.** Model skill trust as a **single `trustState` field** on one `EmployeeSkill` row, written exclusively through an **upsert keyed by `(profileId, canonicalSkillId)`** with **monotonic promotion** (`self-reported → manager-approved → verified`; never demote, never duplicate). Enforce single canonical skill identity with **`Skill.canonicalKey @unique`** so every alias of a concept ("TypeScript"/"TS") collapses to one `Skill.id` — the `EmployeeSkill @@unique([employeeId, skillId])` key is necessary but not sufficient without this (TS-001). Skill identity for "is this the same skill?" is resolved in **two layers** (Page 03 §3.4): a **deterministic `canonicalKey` normalization** as the always-available persistence key, and a **Claude `skill-identity` call** as the *semantic merge advisor* (BR-18/BR-06 discipline) — never plain string equality, never the sole gate. **De-dupe failure fallback (TS-002):** on the P0 cert-confirm write path, if the Claude `skill-identity` call fails/is unreachable, the write falls back to **create-new keyed by `canonicalKey` + `reconcilePending`**, so the verified write never blocks or corrupts; the `@unique` key keeps that fallback single-record even under concurrency. Re-assert at equal/lower trust is a no-op.
 
 **Rationale.**
 - This is the **data invariant the loop depends on** (P4) — one place enforces "one record, promotes in place."
@@ -205,13 +205,15 @@
 **Alternatives Considered.**
 - **One row per (skill, source/state) — append-only history:** would create duplicates the loop comparison forbids and complicate matching; rejected (violates BR-18/AC-22).
 - **String-equality skill matching:** would split "TypeScript" self-reported from a "TypeScript" cert into two rows; rejected (BR-18 requires semantic identity via Claude).
+- **`canonicalKey` non-unique (app-layer de-dupe only):** would let two canonical `Skill` rows exist for one concept, re-opening the duplicate-`EmployeeSkill` failure mode; rejected — `canonicalKey @unique` enforces single-record at the DB (TS-001).
+- **Claude `skill-identity` as a hard gate on the write:** would make the most-protected P0 step depend on a *second* live model call (beyond the parse) with no failure path; rejected — Claude advises merges, the deterministic key + reconcile-later fallback keeps the write resilient (TS-002).
 - **A separate state-transition audit table:** approval-workflow sprawl, out of scope (`scope-boundary.v1.md`); rejected (P8).
 
 **Trade-offs.**
 - *Gain:* clean loop comparison, simple matching weight, enforced single identity.
 - *Give up:* trust-state change history (not needed for MVP; promotion mutates in place).
 
-**Impact.** *Technical:* `EmployeeSkill` gains `trustState`/`origin`/`promotedAt`; one repository upsert function; a Claude `skill-identity` call. *Business:* the hero loop works reliably. *Risk:* mis-resolved skill identity could mis-merge — mitigated by the confirm step before cert writes (ADR-004).
+**Impact.** *Technical:* `EmployeeSkill` gains `trustState`/`origin`/`promotedAt`; `Skill` gains `canonicalKey @unique`; one repository upsert function; a two-layer `resolveCanonicalSkill` (deterministic key + Claude merge advisor) with a `reconcilePending` fallback. *Business:* the hero loop works reliably even if a de-dupe model call fails. *Risk:* mis-resolved skill identity could mis-merge — mitigated by the confirm step before cert writes (ADR-004); de-dupe-call failure cannot break the write (TS-002), at worst leaving a redundant row for a later reconcile pass (de-dupe quality, not loop correctness).
 
 **Evidence.** BR-18/BR-15/BR-16; AC-07/17/18/22; `prisma/schema.prisma:49-60` (EmployeeSkill + unique key); current-state TD-DATA-01; Page 03 §3.
 

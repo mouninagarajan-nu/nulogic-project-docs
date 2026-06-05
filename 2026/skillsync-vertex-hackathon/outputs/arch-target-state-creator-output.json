@@ -4,6 +4,34 @@
   "initiative_id": "skillsync-vertex-hackathon",
   "sub_phase": "target-state",
   "version": "v1",
+  "revision_iteration": 2,
+  "revision_mode": "in_place_finding_resolution",
+  "review_findings_resolved": [
+    {
+      "id": "TS-001",
+      "severity": "yellow",
+      "resolution": "Marked Skill.canonicalKey @unique (Page 03 §1 ERD, starter table, §4.2, §6.1 constraint table). Restated the BR-18 single-record key precisely: @@unique([employeeId,skillId]) is necessary-but-not-sufficient; canonicalKey @unique collapses aliases ('TypeScript'/'TS') to one canonical Skill.id. Added §3.4 documenting how resolveCanonicalSkill resolves cert/resume/self-service names to the canonical key before the EmployeeSkill upsert. ADR-007 Decision/Alternatives/Impact updated.",
+      "pages_touched": ["03-data-model.md", "05-strategic-adrs.md", "02-service-design-api-contracts.md"]
+    },
+    {
+      "id": "TS-002",
+      "severity": "yellow",
+      "resolution": "Specified a de-dupe failure fallback on the P0 cert-confirm write path. skill-identity is now a Claude merge ADVISOR (Layer 2), not a gate; the deterministic canonicalKey (Layer 1) is the always-available persistence key. On skill-identity failure/unreachable/invalid-JSON, fall back to create-new keyed by canonicalKey + reconcilePending flag — write never blocks or corrupts; canonicalKey @unique keeps it single-record under concurrency. Documented in Page 03 §3.4, Page 02 §4.1 sequence + note + §5 cross-cutting row, ADR-007.",
+      "pages_touched": ["03-data-model.md", "02-service-design-api-contracts.md", "05-strategic-adrs.md"]
+    },
+    {
+      "id": "TS-003",
+      "severity": "yellow",
+      "resolution": "Pinned runMatch transport as a READ. Removed it from the Server Actions (mutations) table; added Page 02 §3.2a specifying it as a read-only Route Handler (POST /api/match, query in body, no DB writes) with GET-equivalent acceptable; rationale covers why not a Server Action and caching/idempotency cleanliness. ADR-006 Decision/Rationale updated.",
+      "pages_touched": ["02-service-design-api-contracts.md", "05-strategic-adrs.md"]
+    },
+    {
+      "id": "TS-004",
+      "severity": "yellow",
+      "resolution": "Added DB-level upload idempotency: @@unique([employeeId, contentHash]) on both Certificate and Resume (scoped per employee). App-layer 'seen before?' check kept as fast path; the unique constraint is the race-safe backstop under concurrent double-submit. Updated Page 03 ERD field comments, §4.6, §6.1 constraint table; Page 02 §5 cross-cutting row; ADR-004 Decision/Rationale/Impact.",
+      "pages_touched": ["03-data-model.md", "02-service-design-api-contracts.md", "05-strategic-adrs.md"]
+    }
+  ],
   "classification": "greenfield",
   "evidence_collection_method": "direct_scan",
   "evidence_note": "LightRAG MCP not available this run; per the agent's fallback rule, proceeded with direct inspection of the single net-new repo (ai-nu-skillsync). Greenfield single-app initiative — no NULogic platform services to discover for reuse. Verified the existing prisma/schema.prisma, package.json, prisma.config.ts, .env.example, app scaffold, and the Next.js 16 breaking-change docs in node_modules/next/dist/docs/.",
@@ -51,7 +79,9 @@
     "Opus model for staffing ranking — justified in ADR-003 / model-routing table per BR-12"
   ],
   "key_design_decisions": [
-    "Single canonical EmployeeSkill record with monotonic trust-state promotion (self-reported->manager-approved->verified), upsert keyed by (profileId, canonicalSkillId) — the BR-18 invariant the hero loop depends on (ADR-007).",
+    "Single canonical EmployeeSkill record with monotonic trust-state promotion (self-reported->manager-approved->verified), upsert keyed by (profileId, canonicalSkillId); Skill.canonicalKey @unique enforces one canonical Skill per concept so aliases (TypeScript/TS) cannot fan out into duplicate rows — the BR-18 invariant the hero loop depends on (ADR-007, TS-001).",
+    "Skill de-dupe is resilient on the P0 write path: deterministic canonicalKey is the persistence key, Claude skill-identity only advises merges; on de-dupe failure, create-new + reconcile-later — the verified cert write never blocks/corrupts (TS-002).",
+    "Upload idempotency is DB-enforced via @@unique([employeeId, contentHash]) on Certificate/Resume, not just an app-layer check (TS-004); the staffing search runMatch is a read-only Route Handler, not a mutation (TS-003).",
     "All intelligence routes through one Claude wrapper enforcing Zod-before-write; failures return typed errors and write nothing (ADR-003, P2).",
     "Real Google OAuth restricted to nulogic.io with a seeded synthetic-handle->profile mapping; real email discarded after hd check, zero real PII persisted (ADR-001/005).",
     "Prompt caching of the system prompt + serialized profile dataset across match queries and the loop's before/after run (P7/BR-12).",
@@ -77,8 +107,9 @@
   "open_items": [
     "UX/Figma designs were 'in progress' at PRD time — UI sections (Phase 8) describe a minimal clean NULogic-branded surface; refine when designs land (delta trigger for Page 02 frontend/UX).",
     "Confidence threshold for cert/resume parse gating is a tuning constant to be set during Phase 2/5.",
-    "Migration history deferred (db:push only) — acceptable for MVP per ADR-002; revisit if persistence outlives the demo."
+    "Migration history deferred (db:push only) — acceptable for MVP per ADR-002; revisit if persistence outlives the demo.",
+    "skill-identity de-dupe failures create a reconcilePending Skill row (TS-002 fallback); a periodic/manual reconcile pass to merge such rows is deferred — degrades de-dupe quality only, never loop correctness."
   ],
   "next_stage_ready": true,
-  "note": "Input file present was 'target-state-creator-input.json' (the agent contract names it 'arch-target-state-creator-input.json'); used the actual file. AskUserQuestion review gates skipped per task instruction (write directly)."
+  "note": "Iteration 2: resolved all 4 yellow reviewer findings (TS-001..TS-004) IN PLACE on v1 target-state pages (no v2 copy, per task instruction). Pages 02/03/05 edited; Page 01 (principle-level loop/idempotency language) already consistent — left unchanged. AskUserQuestion gates skipped per task instruction. Diagrams updated: cert-confirm sequence (Page 02 §4.1) now shows the TS-002 fallback alt-branch. Input file present was 'target-state-creator-input.json' (contract names it 'arch-target-state-creator-input.json'); used the actual file."
 }

@@ -18,14 +18,16 @@ From `prisma/schema.prisma` (read this run): generator outputs the client to `..
 | Starter model | Keep | Extend | Gap (current-state) |
 |---|---|---|---|
 | `Employee` | ✓ | + `timezone`, `seniority`, identity relation | TD-DATA-04 |
-| `Skill` | ✓ | + `canonicalKey` for semantic de-dupe | TD-DATA-01 |
+| `Skill` | ✓ | + `canonicalKey @unique` (forces one canonical Skill per concept) for semantic de-dupe | TD-DATA-01 |
 | `EmployeeSkill` | ✓ | **+ `trustState`, `origin` (baseline vs acquired)** — the core change | TD-DATA-01 |
 | `CatalogItem` | ✓ | **+ `aiEnabled`, `endorsed`, `enrichmentPending`, typed enrichment fields** | TD-DATA-03 |
 | `Enrollment` | ✓ | role in plan (link to `UpskillingPlan`) | TD-PLAN-01 |
 | `Certificate` | ✓ | **+ `contentHash` (idempotency)** | TD-DATA-05 |
 | — | — | **New:** `Resume`, `UpskillingPlan`, `PlanItem`, `IdentityMapping` | TD-DATA-02, TD-AUTH-02 |
 
-**Preserved invariants from the starter:** `Skill.name @unique`, `EmployeeSkill @@unique([employeeId, skillId])` (this *is* the BR-18 single-record key), `Enrollment @@unique([employeeId, catalogItemId])`, Practice-Lead self-relation (`leadId`/`team`).
+**Preserved invariants from the starter:** `Skill.name @unique`, `EmployeeSkill @@unique([employeeId, skillId])`, `Enrollment @@unique([employeeId, catalogItemId])`, Practice-Lead self-relation (`leadId`/`team`).
+
+> **BR-18 single-record key — precise statement (TS-001).** The BR-18 invariant is **one `EmployeeSkill` row per profile per *canonical* skill**. The starter `EmployeeSkill @@unique([employeeId, skillId])` is **necessary but NOT sufficient** on its own: it only prevents duplicate rows for the *same `skillId`*. Two distinct `Skill` rows for the same concept (e.g. `"TypeScript"` and `"TS"`) would each satisfy that key and yield two `EmployeeSkill` rows — the exact hero-loop duplicate-row failure signature (P4/AC-22). The invariant therefore requires **two cooperating constraints**: (1) `Skill.canonicalKey @unique` collapses every spelling/alias of a concept to **one** canonical `Skill.id`; (2) `EmployeeSkill @@unique([employeeId, skillId])` then guarantees one promotable row per profile for that canonical skill. The write path (§3.2) MUST resolve any incoming skill name to the canonical `Skill.id` **before** the `EmployeeSkill` upsert — see §3.4.
 
 ---
 
@@ -61,7 +63,7 @@ erDiagram
     Skill {
         string id PK
         string name UK
-        string canonicalKey "NEW: normalized de-dupe key"
+        string canonicalKey UK "NEW: @unique — enforces single canonical Skill (TS-001)"
         string category "Claude-assigned"
     }
     EmployeeSkill {
@@ -101,7 +103,7 @@ erDiagram
         string id PK
         string employeeId FK
         string fileName
-        string contentHash "NEW: idempotency (BR-19)"
+        string contentHash "NEW: @@unique([employeeId,contentHash]) — DB-enforced idempotency (BR-19/TS-004)"
         string rawText
         string parsedJson "Zod-validated extraction"
         datetime uploadedAt
@@ -110,7 +112,7 @@ erDiagram
         string id PK
         string employeeId FK
         string fileName
-        string contentHash "NEW: idempotency"
+        string contentHash "NEW: @@unique([employeeId,contentHash]) — DB-enforced idempotency (TS-004)"
         string parsedJson "Zod-validated extraction"
         datetime uploadedAt
     }
@@ -150,7 +152,7 @@ stateDiagram-v2
 
 ```text
 function upsertAndPromoteSkill(profileId, skillNameOrId, targetState, source, origin):
-    canonicalSkillId = resolveCanonicalSkill(skillNameOrId)   // Claude skill-identity de-dupe (BR-18), NOT string-equality
+    canonicalSkillId = resolveCanonicalSkill(skillNameOrId)   // resolves to ONE canonical Skill.id; see §3.4 (Claude-assisted, deterministic fallback)
     existing = find EmployeeSkill by (profileId, canonicalSkillId)   // the @@unique key
     if existing is null:
         insert EmployeeSkill(profileId, canonicalSkillId, trustState=targetState, source, origin)
@@ -171,6 +173,42 @@ function upsertAndPromoteSkill(profileId, skillNameOrId, targetState, source, or
 ### 3.3 Baseline vs acquired (BR-16 / AC-16)
 `origin` distinguishes `BASELINE` (skills held before upskilling; seeded or self-reported/resume-derived) from `ACQUIRED` (gained via the tracker/cert). This lets the profile and the demo show capability growth, and lets matching reason over baseline skills + availability (AC-16, P0).
 
+### 3.4 Canonical skill resolution + de-dupe failure fallback (TS-001 / TS-002)
+
+`resolveCanonicalSkill` is the single function that turns any incoming skill string (from cert confirm, resume, self-service, or approval) into exactly **one** canonical `Skill.id`. It is the de-dupe seam that protects the BR-18 invariant. Two things matter for the P0 hero write path: (a) it must always converge aliases to one row (TS-001), and (b) a **Claude de-dupe failure must never block or corrupt the verified write** (TS-002).
+
+**Two-layer resolution — deterministic key first, Claude as the merge advisor:**
+
+```text
+function resolveCanonicalSkill(rawSkillName):
+    // LAYER 1 (deterministic, always runs — never depends on a model call):
+    key = deterministicCanonicalKey(rawSkillName)   // case/whitespace/punctuation-normalized; NOT semantic matching of meaning, just a stable key
+    existing = find Skill by canonicalKey == key      // @unique lookup
+    if existing: return existing.id                   // alias already collapsed → reuse the one canonical Skill
+
+    // LAYER 2 (Claude skill-identity — semantic merge advice, BR-18/BR-06):
+    try:
+        decision = claude.skillIdentity(rawSkillName, candidateSkills)   // "is this the same as an existing skill?"
+        if decision.sameAs is not null:
+            return decision.sameAs                    // merge into the canonical Skill Claude identified
+    catch (modelFailure | unreachable | invalidSchema):
+        // TS-002 FALLBACK — the P0 write must NOT hang or error here:
+        //   fall through to create-new keyed by the deterministic canonicalKey,
+        //   and flag the row for later reconciliation. Never block, never fake a merge.
+        markReconcilePending(key)
+
+    // CREATE-NEW (no semantic match, or Claude failed): one new canonical Skill keyed by `key`.
+    return createSkill(name=rawSkillName, canonicalKey=key).id   // @unique on canonicalKey guarantees single-record even under concurrent create
+```
+
+**Why this is safe (TS-002):**
+- The **deterministic `canonicalKey` (Layer 1) is the persistence key**, not the Claude call. Exact/alias matches collapse without ever touching a model — so the common case of re-asserting `"TypeScript"` is model-independent.
+- Claude's `skill-identity` call (Layer 2) only **suggests merges** for harder semantic cases (`"TS"` ↔ `"TypeScript"`, `"AWS"` ↔ `"Amazon Web Services"`). If it fails, times out, or returns invalid JSON, the path **falls back to create-new keyed by `canonicalKey`** with a `reconcilePending` flag — the verified write still completes, the row is never corrupted, and the loop's promote step cannot hang on a second live model call.
+- `Skill.canonicalKey @unique` makes create-new **idempotent under races**: two concurrent creates for the same key collide on the unique constraint; the loser re-reads the winner's `Skill.id`. This is the DB-level guarantee that backs single-record semantics (TS-001).
+- **Reconcile-later** (deferred, demo-acceptable): rows flagged `reconcilePending` can be merged by a follow-up de-dupe pass; until then they are *correct but possibly slightly redundant* — which degrades de-dupe quality, never loop correctness. Recorded as an OPEN-ITEM, not a blocker.
+
+> **Boundary note:** `deterministicCanonicalKey` is a **normalization** (lowercase, trim, collapse punctuation/whitespace) used only to derive a stable storage key and to short-circuit the obvious exact/alias case — it is **not** keyword/regex "intelligence" substituting for the model. All *semantic* "is this the same skill?" judgement still routes through Claude (BR-09); the deterministic layer only decides *which storage row a confirmed identity lands in*, and provides the safe fallback when the model is unavailable.
+
 ---
 
 ## 4. Model-by-Model Design Notes
@@ -179,7 +217,7 @@ function upsertAndPromoteSkill(profileId, skillNameOrId, targetState, source, or
 Adds `seniority` (`JUNIOR|MID|SENIOR` — needed for "mid-level" queries, AC-04) and `timezone` (IST-overlap, AC-04). `allocation` + `freeFrom` already present (starter lines 24–25) and feed availability reasoning (BR-04). `role` already present; data scoping enforced in the app layer (BR-03). **Synthetic `name`/`email` only** (starter comments preserved).
 
 ### 4.2 Skill (extend)
-Adds `canonicalKey` — a normalized key produced by the Claude skill-identity decision and used to find/merge canonical skills. `name @unique` retained. Category is Claude-assigned.
+Adds **`canonicalKey @unique`** — a deterministic normalized key (see §3.4) that **forces one canonical `Skill` row per concept**. The `@unique` constraint is what makes "TypeScript" and "TS" resolve to a single `Skill.id`, so they cannot fan out into two `EmployeeSkill` rows (TS-001). The Claude `skill-identity` call advises *which* existing canonical skill an alias merges into; the `@unique` key enforces the single-record outcome at the DB level (and idempotently under concurrent creates). `name @unique` retained. Category is Claude-assigned.
 
 ### 4.3 EmployeeSkill (extend — the core change)
 Replaces the flat `source` string semantics with the **trust-state machine**: adds `trustState`, `origin`, `promotedAt`; keeps `source` (provenance), `proficiency`, and crucially the **`@@unique([employeeId, skillId])`** which is the BR-18 single-record key. No new "history" table — promotion mutates the row (P8; approval workflow sprawl is out of scope).
@@ -191,7 +229,9 @@ Adds typed `aiEnabled` (drives the plan gate AC-26 — must be a reliable boolea
 A plan is one-per-employee (`@@unique` on `employeeId`) with `status DRAFT|FINALIZED`. `PlanItem` links chosen `CatalogItem`s. **Finalize validation** (≥2 items AND ≥1 with `aiEnabled=true`) runs in the Plan service (Page 02 §4.6); non-conforming ⇒ stays `DRAFT`, specific message; conforming ⇒ `FINALIZED`, counts toward §8 compliance. The starter `Enrollment` (progress: NOT_STARTED/IN_PROGRESS/COMPLETED) is retained for per-item progress tracking and links to the plan.
 
 ### 4.6 Certificate (extend) + Resume (new) — BR-17/19
-Both store `fileName`, `contentHash` (idempotency — same file → same hash → no re-parse, AC-23), and `parsedJson` (the Zod-validated extraction kept for audit/demo). `Resume.parsedJson` holds `{currentProject, allocation, baselineSkills[]}`. Neither stores PII beyond synthetic profile linkage; uploaded files live in demo-local storage only (ADR-004).
+Both store `fileName`, `contentHash`, and `parsedJson` (the Zod-validated extraction kept for audit/demo). `Resume.parsedJson` holds `{currentProject, allocation, baselineSkills[]}`. Neither stores PII beyond synthetic profile linkage; uploaded files live in demo-local storage only (ADR-004).
+
+**Idempotency is DB-enforced (TS-004).** Each model carries **`@@unique([employeeId, contentHash])`** — same employee + same file bytes → same hash → the second insert is rejected by the DB, not merely by an app-layer "seen before?" check. The app-layer guard remains as a fast path (return the prior `uploadId` without re-parsing, AC-23), but the unique constraint is the **race-safe backstop** under a genuine double-submit (BR-19): two concurrent uploads of the same file collide on the constraint, the loser reads back the winner's row, and no duplicate Certificate/Resume — and therefore no duplicate skill promotion — can be created. Scoped **per employee** so two different employees may legitimately hold a certificate with identical bytes. This matches the rigor of the BR-18 key.
 
 ### 4.7 IdentityMapping (new — BR-13a / AC-14)
 The **OAuth-identity→synthetic-profile** table. Keyed by `syntheticHandle @unique` (an opaque key derived from the OIDC `sub`, **never** the real email/PII), mapping to an `Employee` (synthetic profile + role). Seeded so resolution is **deterministic and testable**. The real email is used only transiently for the `nulogic.io` hosted-domain check and **discarded** (P3). This table is the only thing that touches authentication, and it contains **zero real PII**.
@@ -234,11 +274,13 @@ graph LR
 ### 6.1 Indexing & integrity (demo-appropriate)
 | Constraint | Purpose | AC |
 |---|---|---|
-| `EmployeeSkill @@unique([employeeId, skillId])` | The BR-18 single-record key | AC-22 |
-| `Certificate.contentHash` / `Resume.contentHash` (+ employee) | Idempotent uploads | AC-23 |
+| `Skill.canonicalKey @unique` | **One canonical Skill per concept** — collapses aliases ("TypeScript"/"TS"); the precondition for the BR-18 key (TS-001) | AC-22 |
+| `EmployeeSkill @@unique([employeeId, skillId])` | One promotable row per profile per *canonical* skill (with the above) — the BR-18 single-record key | AC-22 |
+| `Certificate @@unique([employeeId, contentHash])` | **DB-enforced** idempotent cert uploads (race-safe, not app-layer only) (TS-004) | AC-23 |
+| `Resume @@unique([employeeId, contentHash])` | **DB-enforced** idempotent resume uploads (TS-004) | AC-23 |
 | `UpskillingPlan @@unique([employeeId])` | One plan per employee | AC-26 |
 | `IdentityMapping.syntheticHandle @unique` | Deterministic identity resolution | AC-14 |
-| `Skill.name @unique` + `canonicalKey` | Canonical skill identity | AC-22 |
+| `Skill.name @unique` | Display-name uniqueness (retained from starter) | AC-22 |
 | FK cascades (starter) | Clean deletes for synthetic data | — |
 
 ---
