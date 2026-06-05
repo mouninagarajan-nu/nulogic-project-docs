@@ -1,0 +1,27 @@
+{
+  "initiative_id": "skillsync-vertex-hackathon-2026-06",
+  "initiative_name": "skillsync-vertex-hackathon",
+  "one_pager_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/docs/SPEC.md",
+  "created_at": "2026-06-05T00:00:00Z",
+  "current_stage": 1,
+  "phase": "initiative",
+  "local_only": true,
+  "stages": {
+    "1a": {"status": "pending", "agent": "nulogic-prd-creator"},
+    "1b": {"status": "pending", "agent": "nulogic-prd-reviewer"},
+    "2a": {"status": "pending", "agent": "nulogic-acceptance-test-creator"},
+    "2b": {"status": "pending", "agent": "nulogic-acceptance-test-reviewer"},
+    "2c": {"status": "pending", "agent": "nulogic-qe-testplan-generator", "optional": true, "mandatory_prompt": true},
+    "3a": {"status": "pending", "agent": "nulogic-arch-current-state-creator"},
+    "3a-review": {"status": "pending", "agent": "nulogic-arch-reviewer", "scope": "current-state"},
+    "3b": {"status": "pending", "agent": "nulogic-arch-target-state-creator"},
+    "3b-review": {"status": "pending", "agent": "nulogic-arch-reviewer", "scope": "target-state"},
+    "4a": {"status": "pending", "agent": "nulogic-jira-creator"},
+    "4b": {"status": "pending", "agent": "nulogic-jira-reviewer"},
+    "4c": {"status": "pending", "agent": "nulogic-qe-testcases-generator", "optional": true, "mandatory_prompt": true}
+  },
+  "review_overrides": {},
+  "blocking_conditions": [],
+  "jiras_created": [],
+  "artifact_versions": {}
+}
