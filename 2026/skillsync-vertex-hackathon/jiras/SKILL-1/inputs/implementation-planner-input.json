@@ -1,0 +1,22 @@
+{
+  "jira_id": "SKILL-1",
+  "workflow_stage": "implementation-planning",
+  "local_only": true,
+  "context": {
+    "initiative_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/03-architecture/target-state/",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/02-acceptance-tests/"
+    ],
+    "previous_artifacts": [
+      "artifacts/05-dependencies/dependency-report.md",
+      "outputs/dependency-checker-output.json"
+    ],
+    "story_artifacts": [
+      "STORY.md",
+      "SUB-TASK-1.md",
+      "SUB-TASK-2.md",
+      "SUB-TASK-3.md"
+    ],
+    "target_repo_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync"
+  }
+}
