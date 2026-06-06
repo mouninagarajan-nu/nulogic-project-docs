@@ -1,0 +1,14 @@
+{
+  "jira_id": "SKILL-1",
+  "workflow_stage": "dependency-check",
+  "local_only": true,
+  "context": {
+    "initiative_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/03-architecture/target-state/"
+    ],
+    "dependency_graph": {
+      "blocks": ["SKILL-2", "SKILL-3", "SKILL-5", "SKILL-6"],
+      "blocked_by": []
+    }
+  }
+}
