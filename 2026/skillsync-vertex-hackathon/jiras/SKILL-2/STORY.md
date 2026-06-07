@@ -15,8 +15,9 @@
 | **Component** | Upload service, Claude integration, Profile & Skill (upsert+promote) |
 | **Target Repository** | ai-nu-skillsync |
 | **Gaps Closed** | TD-CERT-01, TD-DATA-01 (verify path), TD-DATA-05 (cert idempotency) |
-| **Owner** | -- |
-| **Status** | Backlog |
+| **Owner** | mouninagarajan-nu |
+| **Started At** | 2026-06-07T17:05:00Z |
+| **Status** | In Progress |
 
 ## User Story
 
