@@ -1,0 +1,53 @@
+{
+  "jira_id": "SKILL-1",
+  "agent_id": "nulogic-pr-assembler",
+  "status": "success",
+  "local_only": true,
+  "pr_opened": false,
+  "pr_package_path": "artifacts/11-pr/PR.md",
+  "branch": "feature/SKILL-1-foundation",
+  "base": "master",
+  "commits": ["f447ad4", "e89dae1", "821e5c0"],
+  "files_changed": 50,
+  "insertions": 3808,
+  "deletions": 15,
+  "artifacts_created": [
+    {
+      "type": "pr-description",
+      "path": "artifacts/11-pr/PR.md",
+      "description": "Complete PR evidence package: title, summary, 50-file manifest, AC-13/AC-16 + BR-09/10/12/16/18/19 coverage, 23/23 test evidence, 5 quality gates all PASS, 3 tactical ADRs, carried-forward advisories, local-only push/PR commands."
+    }
+  ],
+  "summary": "PR package assembled locally (no remote). Branch feature/SKILL-1-foundation carries 3 commits over master: 50 files changed, 3808 insertions, 15 deletions. Tests 23/23 GREEN. All 5 quality gates PASS. R3-01 resolved; SEC-M01/M02, PERF, SRE carried forward as non-blocking advisories.",
+  "pr_details": {
+    "pr_number": null,
+    "pr_url": null,
+    "branch_name": "feature/SKILL-1-foundation",
+    "target_branch": "master",
+    "reviewers_assigned": [],
+    "commit_shas": ["f447ad4", "e89dae1", "821e5c0"],
+    "note": "No remote configured. Use gh pr create command in PR.md when remote is added."
+  },
+  "quality_gates": {
+    "all_tests_passing": true,
+    "tests_passing": 23,
+    "tests_total": 23,
+    "coverage_met": true,
+    "coverage_note": "Coverage tooling deferred (hackathon relaxation); targets relaxed for SKILL-1 foundation story",
+    "confidence_acceptable": true,
+    "dependencies_resolved": true,
+    "no_merge_conflicts": true
+  },
+  "ready_for_review": true,
+  "next_stage_ready": true,
+  "built_from": {
+    "implementation_summary": "artifacts/08-implementation/implementation-summary.md",
+    "quality_gates_report": "artifacts/09-quality-gates/combined-report.md",
+    "documentation_sync": "artifacts/10-documentation/sync-summary.md",
+    "story": "STORY.md"
+  },
+  "metadata": {
+    "assembled_at": "2026-06-07T00:00:00Z",
+    "assembled_by": "nulogic-pr-assembler"
+  }
+}

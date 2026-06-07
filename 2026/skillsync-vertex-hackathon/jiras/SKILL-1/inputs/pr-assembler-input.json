@@ -1,0 +1,20 @@
+{
+  "jira_id": "SKILL-1",
+  "workflow_stage": "pr-assembly",
+  "local_only": true,
+  "council_approval_status": "not_required",
+  "code_repo": {
+    "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+    "branch": "feature/SKILL-1-foundation",
+    "base": "master",
+    "no_remote": true,
+    "commits": ["f447ad4", "e89dae1", "821e5c0"]
+  },
+  "context": {
+    "previous_artifacts": [
+      "artifacts/08-implementation/implementation-summary.md",
+      "artifacts/09-quality-gates/combined-report.md",
+      "artifacts/10-documentation/sync-summary.md"
+    ]
+  }
+}
