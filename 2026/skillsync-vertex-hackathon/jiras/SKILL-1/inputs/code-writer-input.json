@@ -1,0 +1,33 @@
+{
+  "jira_id": "SKILL-1",
+  "workflow_stage": "code-writing",
+  "local_only": true,
+  "mode": "TDD-GREEN",
+  "carry_forward_constraints": [
+    {
+      "id": "R3-01",
+      "severity": "high",
+      "constraint": "Synthetic handles MUST use the literal prefix 'synthetic-handle-' (e.g. synthetic-handle-007). The seed + IdentityMapping + loadSeedProfiles must satisfy the /^synthetic-handle-/ assertions already in tests/foundation/no-pii.test.ts."
+    }
+  ],
+  "non_negotiables": [
+    "BR-10 / AC-13: synthetic data only, ZERO real names/emails/PII anywhere (repo, DB, fixtures); secrets only via env, placeholders in .env.example.",
+    "BR-09: ALL intelligence routes through the Claude wrapper with Zod validate-before-write; safeParse failure or low confidence returns a typed Failure, never persists raw model text. No hardcoded/keyword/regex substitutes; awkward calls stubbed with a TODO that returns failure.",
+    "ADR-002: EXTEND the starter prisma/schema.prisma additively, do not replace; preserve starter @@unique keys.",
+    "Next.js 16 / Prisma v7 conventions: read node_modules/next/dist/docs/ before any Next.js code."
+  ],
+  "context": {
+    "initiative_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/02-acceptance-tests/"
+    ],
+    "previous_artifacts": [
+      "artifacts/06-planning/implementation-plan.md",
+      "artifacts/06-planning/test-scenarios.json",
+      "artifacts/06-planning/tactical-adrs.md",
+      "artifacts/07-tests/scenarios.md",
+      "artifacts/07-tests/coverage-targets.md"
+    ],
+    "target_repo_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+    "test_files_location": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/"
+  }
+}
