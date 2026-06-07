@@ -6,8 +6,8 @@
   "story_points": 8,
   "t_shirt": "L",
   "priority": "Highest",
-  "status": "In Progress",
-  "lifecycle_status": "In Progress",
+  "status": "Done",
+  "lifecycle_status": "Done",
   "owner": "mouni.nagarajan@nulogic.io",
   "blocks": ["SKILL-2", "SKILL-3", "SKILL-5", "SKILL-6"],
   "blocked_by": [],
@@ -38,7 +38,7 @@
     "9": {"status": "complete", "agent": "nulogic-quality-gate-validator", "completed_at": "2026-06-07T00:00:00Z", "gates_passed": true},
     "10": {"status": "complete", "agent": "(built-in)", "completed_at": "2026-06-07T00:00:00Z"},
     "11": {"status": "complete", "agent": "nulogic-pr-assembler", "completed_at": "2026-06-07T00:00:00Z", "pr_opened": false, "pr_package": "artifacts/11-pr/PR.md"},
-    "12": {"status": "pending", "agent": "nulogic-deployment-agent"}
+    "12": {"status": "skipped", "agent": "nulogic-deployment-agent", "reason": "local-only, no deploy target; story finalized as Done after PR assembly per user", "completed_at": "2026-06-07T00:00:00Z"}
   },
   "review_overrides": {},
   "blocking_conditions": [],
