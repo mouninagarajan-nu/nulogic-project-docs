@@ -1,0 +1,102 @@
+{
+  "status": "success",
+  "jira_id": "SKILL-1",
+  "stage": "07-tests",
+  "mode": "LOCAL-ONLY",
+  "agent": "nulogic-test-creator",
+  "iteration": 2,
+  "built_from": {
+    "implementation_plan": "v1",
+    "test_scenarios": "v1",
+    "tactical_adrs": "v1",
+    "acceptance_tests": "v1"
+  },
+  "reconciliation_note": "Prior run was interrupted after creating the 4 foundation test files + 2 setup files + vitest.config + 2 docs. This run reconciled them against the 20 planned scenarios (all covered — no scenarios were missing), wired the pinned tsx executor + esbuild build approval so the harness runs cleanly, verified the RED run, and wrote this output. No test files were recreated or duplicated.",
+  "iteration_2_note": "Resolved the test-reviewer's 3 findings IN PLACE (no suite recreation). TR-1-01: standardized the injectable-client key on { client } everywhere (schema-invariant TS-P2-08 changed from { claude } to { client }, matching the callClaude/resolveCanonicalSkill contract in implementation-plan.md and wrapper-gate); TS-P2-08 now ASSERTS the merge-advisor createMessage was invoked (toHaveBeenCalled). TR-1-02: authored the canonical tests/setup/test-helpers.ts (the contract referenced at test-helpers.ts:145-165 was never materialized as a file) holding the three injectable-client doubles, and both wrapper-gate and schema-invariant now import them instead of re-declaring locally; the dead makeClaudeClientSpy in schema-invariant was removed (unused there) and makeClaudeClientGarbled is now imported. TR-1-03: baseline-skills.test.ts no longer hardcodes 2026-06-05 — the past/future freeFrom split is derived relative to new Date() ('now'), the same reference availability is reasoned against. Counts unchanged (23 total); R3-01 /^synthetic-handle-/ assertions in no-pii.test.ts untouched.",
+  "review_findings_resolved": ["TR-1-01", "TR-1-02", "TR-1-03"],
+  "tests_created": 23,
+  "test_files": [
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/foundation/wrapper-gate.test.ts",
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/foundation/schema-invariant.test.ts",
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/foundation/no-pii.test.ts",
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/foundation/baseline-skills.test.ts",
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/setup/test-helpers.ts",
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/setup/global-db.ts",
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/setup/db.ts",
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/vitest.config.ts"
+  ],
+  "test_breakdown": {
+    "wrapper-gate.test.ts": 7,
+    "schema-invariant.test.ts": 6,
+    "no-pii.test.ts": 5,
+    "baseline-skills.test.ts": 5
+  },
+  "test_type_breakdown": {
+    "unit": 7,
+    "integration": 13,
+    "review": 3
+  },
+  "scenarios_covered": "20/20",
+  "scenario_map": {
+    "TS-P0-01": "harness (vitest.config.ts + tests/setup/global-db.ts + tests/setup/db.ts)",
+    "TS-P1-01": "schema-invariant.test.ts (3 it blocks: new models + canonicalKey, EmployeeSkill @@unique, Certificate @@unique)",
+    "TS-P1-02": "baseline-skills.test.ts",
+    "TS-P1-03": "baseline-skills.test.ts",
+    "TS-P1-04": "no-pii.test.ts (asserts /^synthetic-handle-/ — R3-01)",
+    "TS-P1-05": "no-pii.test.ts",
+    "TS-P2-01": "wrapper-gate.test.ts",
+    "TS-P2-02": "wrapper-gate.test.ts",
+    "TS-P2-03": "wrapper-gate.test.ts",
+    "TS-P2-04": "wrapper-gate.test.ts",
+    "TS-P2-05": "wrapper-gate.test.ts",
+    "TS-P2-06": "schema-invariant.test.ts",
+    "TS-P2-07": "schema-invariant.test.ts",
+    "TS-P2-08": "schema-invariant.test.ts",
+    "TS-P3-01": "schema-invariant.test.ts (consolidated with TS-P2-06)",
+    "TS-P3-02": "no-pii.test.ts (asserts /^synthetic-handle-/ — R3-01)",
+    "TS-P3-03": "wrapper-gate.test.ts",
+    "TS-P3-04": "baseline-skills.test.ts (consolidated with TS-P1-02)",
+    "TS-P3-05": "wrapper-gate.test.ts (single-file isolation harness sentinel)",
+    "TS-P3-06": "harness (tests/setup/global-db.ts DATABASE_URL override + tests/setup/db.ts dev.db guard)"
+  },
+  "acs_covered": ["AC-13", "AC-16"],
+  "brs_covered": ["BR-09", "BR-10", "BR-12", "BR-16", "BR-18", "BR-19"],
+  "additional_refs_touched": ["AC-14", "AC-22", "AC-26", "AC-03", "AC-04", "AC-06", "AC-20", "BR-11", "TS-001", "TS-002", "TS-004"],
+  "all_red": true,
+  "red_evidence": "pnpm vitest run -> 4 failed test files, 22 failed | 1 passed (23 total). All 22 failures are implementation-missing module-resolution errors: 'Cannot find package @/lib/ai/claude', '@/lib/ai/route', '@/lib/repos/db' (via tests/setup/db.ts), '@/lib/repos/skill', '@/lib/dev/guardrails'. No syntax, no import-resolution errors inside the test files, no harness crash — globalSetup ran 'prisma db push' successfully against the disposable DB and the unimplemented seed warned (did not abort) as designed. The single 'passed' is TS-P3-05, a harness-only single-file-isolation sentinel (empty ac_refs/br_refs) that asserts import.meta.url; it is not a false-green over any feature. Single-file command verified: 'pnpm vitest run tests/foundation/wrapper-gate.test.ts' isolates to 6 failed | 1 passed (7).",
+  "red_evidence_iteration_2": "After resolving TR-1-01/02/03 in place: pnpm vitest run -> 4 failed test files, 22 failed | 1 passed (23 total) — IDENTICAL to iteration 1. Failure aggregation: 5x '@/lib/ai/claude', 1x '@/lib/ai/route', 10x '@/lib/repos/db' (via tests/setup/db.ts), 3x '@/lib/repos/skill', 3x '@/lib/dev/guardrails'. The new tests/setup/test-helpers.ts import resolves cleanly (zero errors reference it). No NEW syntax/import errors introduced by the edits. Typecheck (tsc --noEmit) shows only the pre-existing RED-phase 'prisma.* is of type unknown' diagnostics from the intentionally loosely-typed lazy proxy in tests/setup/db.ts — none reference test-helpers, the { client } key, createMessage, or any edited line. The 1 'passed' remains the TS-P3-05 harness sentinel.",
+  "harness_wiring": {
+    "executor": "tsx 4.22.4 added as devDependency (TACTICAL-ADR-03 pin)",
+    "esbuild_build_approved": "pnpm-workspace.yaml allowBuilds.esbuild = true (resolved ERR_PNPM_IGNORED_BUILDS so the pnpm deps-status check no longer blocks 'pnpm vitest run')",
+    "vitest_globalSetup": "tests/setup/global-db.ts overrides DATABASE_URL to file:./.tmp/test-<pid>-<ts>.db, runs prisma db push + db seed, deletes temp file in teardown",
+    "runtime_client_override": "lib/repos/db.ts (Stage 8) must construct new PrismaClient({ datasourceUrl: process.env.DATABASE_URL }) — F-02",
+    "dev_db_guard": "tests/setup/db.ts beforeAll refuses file:./dev.db and any /dev.db path (TS-P3-06)"
+  },
+  "r3_01_synthetic_handle_asserted": true,
+  "r3_01_evidence": "no-pii.test.ts defines SYNTHETIC_HANDLE = /^synthetic-handle-/ and asserts it in TS-P1-04 (IdentityMapping.syntheticHandle) and TS-P3-02 (loadSeedProfiles().handle). Literal 'synthetic-handle-' prefix, NOT 'handle-<n>'.",
+  "coverage_targets": {
+    "overall": 40,
+    "new_code": 45,
+    "branch": 40,
+    "critical_paths": 75,
+    "critical_path_files": {
+      "lib/ai/claude.ts": "BR-09 validate-before-write (wrapper-gate.test.ts)",
+      "lib/repos/skill.ts": "BR-18 single canonical-record (schema-invariant.test.ts)",
+      "lib/dev/guardrails.ts": "BR-10 no-PII gate (no-pii.test.ts)"
+    },
+    "config_to_wire_at_green": "vitest.config.ts test.coverage (provider v8) per artifacts/07-tests/coverage-targets.md"
+  },
+  "artifacts_created": [
+    "artifacts/07-tests/scenarios.md",
+    "artifacts/07-tests/coverage-targets.md",
+    "outputs/test-creator-output.json"
+  ],
+  "modified_for_harness": [
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/package.json (tsx devDependency)",
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/pnpm-lock.yaml (tsx + esbuild)",
+    "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/pnpm-workspace.yaml (allowBuilds.esbuild = true)"
+  ],
+  "git_branch": "feature/SKILL-1-foundation",
+  "tests_staged_not_committed": true,
+  "next_stage_ready": true
+}

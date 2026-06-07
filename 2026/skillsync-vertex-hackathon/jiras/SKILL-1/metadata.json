@@ -13,8 +13,8 @@
   "blocked_by": [],
   "acs": ["AC-13", "AC-16"],
   "business_rules": ["BR-09", "BR-10", "BR-12", "BR-16", "BR-18", "BR-19"],
-  "current_stage": 7,
-  "pipeline_stage": "07-tests",
+  "current_stage": 8,
+  "pipeline_stage": "08-implementation",
   "docs_branch": "feature/SKILL-1-foundation",
   "target_repositories": [
     {
@@ -29,8 +29,9 @@
     "6a": {"status": "complete", "agent": "nulogic-implementation-planner"},
     "6b": {"status": "complete", "agent": "nulogic-implementation-reviewer"},
     "6": {"convergence_override": "user_accepted", "convergence_loop": {"current_iteration": 3, "max_iterations": 3, "min_iterations": 1, "loop_status": "max_iterations_reached", "last_doer_completed": "2026-06-06T00:00:00Z", "last_reviewer_completed": "2026-06-06T00:00:00Z", "last_reviewer_result": {"next_stage_ready": false, "total_findings": 1, "status": "needs_revision", "iteration": 3, "open_findings": [{"id": "R3-01", "severity": "high", "description": "synthetic-handle prefix mismatch: plan/SUB-TASK-1 say handle-<n> but AC-13 test asserts /^synthetic-handle-/"}]}, "next_stage_ready": false}, "accepted_gaps": [{"id": "R3-01", "severity": "high", "carry_forward_to": ["7", "8"], "constraint": "Seed MUST emit synthetic handles with literal prefix 'synthetic-handle-' (e.g. synthetic-handle-007), NOT 'handle-<n>'. Stage 7 test-creator must assert /^synthetic-handle-/ in TS-P1-04 and TS-P3-02; Stage 8 code-writer must implement it."}]},
-    "7a": {"status": "pending", "agent": "nulogic-test-creator"},
-    "7b": {"status": "pending", "agent": "nulogic-test-reviewer"},
+    "7a": {"status": "complete", "agent": "nulogic-test-creator"},
+    "7b": {"status": "complete", "agent": "nulogic-test-reviewer"},
+    "7": {"convergence_loop": {"current_iteration": 2, "max_iterations": 3, "min_iterations": 1, "loop_status": "converged", "last_doer_completed": "2026-06-07T00:00:00Z", "last_reviewer_completed": "2026-06-07T00:00:00Z", "last_reviewer_result": {"next_stage_ready": true, "total_findings": 0, "status": "approved", "iteration": 2}, "next_stage_ready": true}},
     "8a": {"status": "pending", "agent": "nulogic-code-writer"},
     "8b": {"status": "pending", "agent": "nulogic-code-reviewer"},
     "9": {"status": "pending", "agent": "nulogic-quality-gate-validator"},
