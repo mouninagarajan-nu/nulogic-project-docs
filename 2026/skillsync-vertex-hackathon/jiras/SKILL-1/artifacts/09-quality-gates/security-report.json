@@ -1,0 +1,112 @@
+{
+  "agent": "security-scanner",
+  "jira_id": "SKILL-1",
+  "branch": "feature/SKILL-1-foundation",
+  "scan_date": "2026-06-07",
+  "status": "pass",
+  "critical_findings": 0,
+  "high_findings": 0,
+  "medium_findings": 2,
+  "low_findings": 3,
+  "secrets_detected": false,
+  "pii_detected": false,
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "id": "SEC-M01",
+      "category": "Prompt Injection",
+      "description": "Prompt templates in src/prompts/*.ts interpolate user-supplied variables directly into message content via String() coercion (e.g. parse-certificate.ts, match-staffing.ts). While all current callers in SKILL-1 use synthetic/controlled data, there is no sanitization layer at the template boundary. Future callers supplying user-uploaded certificate text or free-text query strings could craft prompt injection payloads.",
+      "file": "src/prompts/parse-certificate.ts, src/prompts/match-staffing.ts",
+      "recommendation": "Add a lightweight variable-sanitization helper that strips or escapes common injection markers (e.g. 'Ignore all previous instructions') before template interpolation. At minimum, document the threat model and enforce sanitization when user-controlled text is first introduced in SKILL-2+."
+    },
+    {
+      "severity": "MEDIUM",
+      "id": "SEC-M02",
+      "category": "Dependency Risk",
+      "description": "@anthropic-ai/sdk is declared at ^0.100.1 (a very recent major version). The pnpm-lock.yaml pins the exact resolved version at install time, but the broad caret range means a future `pnpm install` could resolve to a newer minor with breaking behavioural changes to the streaming/message API used by callClaude. No audit script is configured.",
+      "file": "package.json",
+      "recommendation": "Pin @anthropic-ai/sdk to an exact version (or a tight ~patch range) and add `pnpm audit` to CI. Also pin better-sqlite3 which is a native module with a known history of CVEs."
+    },
+    {
+      "severity": "LOW",
+      "id": "SEC-L01",
+      "category": "Insecure Default",
+      "description": "lib/repos/db.ts falls back to 'file:./dev.db' when DATABASE_URL is absent. In a misconfigured environment this silently creates or connects to a local dev database, which could lead to test data bleeding into a production-adjacent environment.",
+      "file": "lib/repos/db.ts:20",
+      "recommendation": "In production (NODE_ENV=production), throw an explicit error if DATABASE_URL is not set rather than silently defaulting to dev.db."
+    },
+    {
+      "severity": "LOW",
+      "id": "SEC-L02",
+      "category": "Information Exposure",
+      "description": "lib/ai/claude.ts logs requestId, promptName, model, and reason via console.debug. The log payload itself is clean (no raw model text, no PII per privacy.md). However, console.debug emits to stdout in all environments including production Node.js unless explicitly suppressed. In a future deployed environment this could populate structured logs with prompt metadata.",
+      "file": "lib/ai/claude.ts:93",
+      "recommendation": "Gate console.debug behind a log-level check (e.g. only when LOG_LEVEL=debug or NODE_ENV !== 'production'), or replace with a structured logger that respects log-level configuration."
+    },
+    {
+      "severity": "LOW",
+      "id": "SEC-L03",
+      "category": "Type Safety / Injection Surface",
+      "description": "callClaude uses `InjectableFn = Function` (ESLint @typescript-eslint/no-unsafe-function-type suppressed) for the createMessage injectable. The loose typing means TypeScript cannot catch a misshapen client at compile time. An injected client returning unexpected structures could bypass the response-shape validation if extractStructuredBlock is too lenient.",
+      "file": "lib/ai/claude.ts:39",
+      "recommendation": "Replace InjectableFn with the exact arrow signature `(args: CreateMessageArgs) => Promise<CreateMessageResponse>` and remove the eslint-disable comment. The vitest mock can be cast at the test callsite."
+    }
+  ],
+  "scan_coverage": {
+    "files_scanned": [
+      "lib/ai/claude.ts",
+      "lib/ai/route.ts",
+      "lib/ai/canonical-key.ts",
+      "lib/repos/db.ts",
+      "lib/repos/skill.ts",
+      "lib/domain/trust-state.ts",
+      "lib/dev/guardrails.ts",
+      "prisma/seed.ts",
+      "src/prompts/*.ts",
+      "src/schemas/*.ts",
+      ".env.example",
+      ".env (worktree only — not committed)",
+      ".gitignore",
+      "package.json",
+      "fixtures/certs/*",
+      "fixtures/resumes/*"
+    ],
+    "checks_performed": [
+      "Hardcoded secrets scan (sk-ant-, AKIA, BEGIN PRIVATE KEY, ghp_, glpat-)",
+      "Real-domain email grep (@*.com/io/org/net excluding vertex.test, example.com)",
+      "ANTHROPIC_API_KEY / OAuth credential literal scan",
+      "PII-in-logs check (name, email, raw JWT in console output)",
+      "Prompt injection surface review",
+      "Claude boundary validate-before-write compliance (BR-09)",
+      "env-only secrets config verification",
+      "git history scan (.env committed check)",
+      "Dependency version risk (native modules, SDK)",
+      "code injection surface (eval, exec, child_process)",
+      "IDOR surface (no API routes in SKILL-1 — not applicable)",
+      "SOC 2 compliance: log masking, no PII in logs, secrets via env"
+    ]
+  },
+  "non_negotiables": {
+    "secrets_from_env_only": {
+      "status": "PASS",
+      "notes": "ANTHROPIC_API_KEY, GOOGLE_CLIENT_ID/SECRET, AUTH_SECRET all read from env. lib/ai/route.ts uses process.env for model IDs with safe defaults. .env is gitignored; only .env.example (with [REDACTED] placeholders) is committed."
+    },
+    "no_real_pii": {
+      "status": "PASS",
+      "notes": "All 22 seeded employees use synthetic-handle-NNN handles and @vertex.test emails. Employee.name is 'Synthetic Person NNN'. loadSeedProfiles() projects away the name column. No real-domain emails found in lib/, src/, or prisma/."
+    },
+    "claude_boundary_no_raw_leak": {
+      "status": "PASS",
+      "notes": "callClaude() logs only requestId/promptName/model/ok/reason — no raw model text. Raw response goes through extractStructuredBlock -> JSON.parse -> Zod safeParse; on any failure a typed Failure is returned and nothing is persisted. Log entry is a fixed-schema struct, not a JSON.stringify of the full response."
+    },
+    "no_hardcoded_anthropic_key": {
+      "status": "PASS",
+      "notes": "No sk-ant-* literals detected anywhere in tracked source. DEFAULT_SONNET/DEFAULT_OPUS in route.ts are model-ID strings, not API keys."
+    }
+  },
+  "gate_decision": {
+    "gate_passed": true,
+    "blocking_reason": null,
+    "advisory": "2 MEDIUM findings (prompt injection surface for future callers, dependency pin hygiene) and 3 LOW findings. None block SKILL-1 which is a LOCAL-ONLY foundation story with no deployed API surface and no user-controlled input yet. Address SEC-M01 before SKILL-2 introduces user-uploaded certificate text."
+  }
+}

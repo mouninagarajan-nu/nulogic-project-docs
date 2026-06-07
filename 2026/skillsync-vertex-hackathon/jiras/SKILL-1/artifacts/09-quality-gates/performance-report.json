@@ -1,0 +1,74 @@
+{
+  "agent": "performance-validator",
+  "jira_id": "SKILL-1",
+  "status": "pass",
+  "mode": "static-only (no runtime surface)",
+  "slos_applicable": false,
+  "slo_note": "LOCAL-ONLY foundation/data-infra story. No deployed service, no HTTP endpoints, no production runtime. SLOs (p95 < 200ms, max regression 20%) cannot be measured and are NOT-APPLICABLE for this stage.",
+  "n_plus_1_detected": false,
+  "missing_indexes": [],
+  "findings": [
+    {
+      "severity": "advisory",
+      "id": "PERF-01",
+      "category": "N+1 — advisory, not severe",
+      "description": "seed.ts inserts employees and their EmployeeSkill rows sequentially in a loop (one INSERT per employee, one INSERT per skill-assignment per employee). This is a seed/migration path — not a hot query path — and runs once at setup time with 22 profiles. No runtime impact.",
+      "file": "prisma/seed.ts",
+      "lines": "126-172",
+      "recommendation": "Acceptable for a one-shot seed of 22 records. If the seed grows to thousands of profiles, batch with createMany inside a $transaction for speed. No action needed for SKILL-1."
+    },
+    {
+      "severity": "advisory",
+      "id": "PERF-02",
+      "category": "Sequential findMany before Claude call",
+      "description": "resolveCanonicalSkill (Layer 2 path) calls prisma.skill.findMany to fetch all canonical keys before passing them to Claude. For SKILL-1's expected catalog size (12 skills seeded) this is negligible. At scale (hundreds of skills) this becomes an unbounded full-table scan on every unknown skill.",
+      "file": "lib/repos/skill.ts",
+      "lines": "69-71",
+      "recommendation": "Advisory only. When the skill catalog grows, cache the canonical-key list in memory (or use a Redis SET) rather than re-fetching on every Layer-2 call. Not a blocking concern for the hackathon demo."
+    },
+    {
+      "severity": "info",
+      "id": "PERF-03",
+      "category": "No explicit indexes on FK columns (SQLite advisory)",
+      "description": "SQLite does NOT auto-index foreign key columns. The following FK columns in the schema lack explicit @@index declarations: EmployeeSkill.employeeId, EmployeeSkill.skillId, Enrollment.employeeId, Enrollment.catalogItemId, Certificate.employeeId, Resume.employeeId, PlanItem.planId, PlanItem.catalogItemId, UpskillingPlan.employeeId (covered by @unique), IdentityMapping.employeeId (covered by @unique). Queries that filter by these columns (e.g. 'fetch all skills for an employee') will do a full table scan in SQLite without an index.",
+      "file": "prisma/schema.prisma",
+      "recommendation": "Add @@index([employeeId]) to EmployeeSkill, Enrollment, Certificate, Resume, and PlanItem. For a hackathon demo with 22 seed profiles this is below detection threshold. Recommend adding indexes before any real-scale demo or production use to avoid O(N) scans on skill lookups and cert fetches. This is advisory — not a gate failure for SKILL-1.",
+      "affected_models": [
+        "EmployeeSkill (employeeId, skillId)",
+        "Enrollment (employeeId, catalogItemId)",
+        "Certificate (employeeId)",
+        "Resume (employeeId)",
+        "PlanItem (planId, catalogItemId)"
+      ]
+    },
+    {
+      "severity": "info",
+      "id": "PERF-04",
+      "category": "Employee.leadId FK — no index",
+      "description": "The self-referencing leadId FK on Employee is not indexed. 'Fetch all team members for a Practice Lead' will scan all employees. With 22 seed profiles this is negligible.",
+      "file": "prisma/schema.prisma",
+      "lines": "35",
+      "recommendation": "Add @@index([leadId]) to Employee when the team size grows. Advisory only."
+    },
+    {
+      "severity": "info",
+      "id": "PERF-05",
+      "category": "No resource leak — Prisma client lifecycle correct",
+      "description": "db.ts uses a globalThis singleton to reuse the Prisma client across Next.js hot-reloads (standard pattern). seed.ts instantiates its own client and explicitly calls prisma.$disconnect() in both the success and error paths. No unclosed handle detected.",
+      "file": "lib/repos/db.ts, prisma/seed.ts",
+      "recommendation": "No action needed."
+    }
+  ],
+  "atomicity_violations": [],
+  "unbatched_calls": [],
+  "gate_details": {
+    "n_plus_1_hot_path": "PASS — no N+1 in a hot/runtime query path. The seed loop is a one-shot init path.",
+    "missing_index_single_record_invariant": "PASS — the single-record invariant (BR-18) is enforced by @@unique([employeeId, skillId]) on EmployeeSkill and @unique on UpskillingPlan.employeeId. Both are indexed by the UNIQUE constraint in SQLite.",
+    "resource_leaks": "PASS — no unclosed Prisma clients or DB handles detected.",
+    "atomicity_violations": "PASS — no read-then-write races on the same entity without a guard. upsertAndPromoteSkill's read+conditional-write is acceptable: the @@unique constraint + the sequential SQLite write serializer prevents a duplicate row; the worst case of a race is a benign re-read after a unique-violation catch (see resolveCanonicalSkill lines 93-102).",
+    "performance_tests_required": "NOT-APPLICABLE — LOCAL-ONLY foundation story; no deployed service surface.",
+    "slo_runtime_validation": "DEFERRED — to Tier 2/3 when a runnable service exists (not in scope for SKILL-1)."
+  },
+  "generated_by": "nulogic-performance-validator",
+  "generated_at": "2026-06-07T00:00:00Z"
+}
