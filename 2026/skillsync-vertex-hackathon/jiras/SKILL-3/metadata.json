@@ -8,7 +8,8 @@
   "priority": "Highest",
   "status": "Backlog",
   "blocks": ["SKILL-4"],
-  "blocked_by": ["SKILL-1"],
+  "blocked_by": [],
+  "blocked_by_resolved": ["SKILL-1"],
   "acs": ["AC-04", "AC-05", "AC-06", "AC-21"],
   "business_rules": ["BR-03", "BR-04", "BR-05", "BR-09", "BR-12"],
   "target_repositories": [
