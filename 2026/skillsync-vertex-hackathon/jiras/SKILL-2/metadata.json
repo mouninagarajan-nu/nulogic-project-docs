@@ -7,15 +7,15 @@
   "t_shirt": "L",
   "priority": "Highest",
   "status": "Backlog",
-  "lifecycle_status": "In Progress",
+  "lifecycle_status": "Ready",
   "owner": "mouninagarajan-nu",
   "blocks": ["SKILL-4"],
   "blocked_by": [],
   "blocked_by_resolved": ["SKILL-1"],
   "acs": ["AC-01", "AC-02", "AC-03", "AC-22", "AC-23"],
   "business_rules": ["BR-01", "BR-02", "BR-09", "BR-18", "BR-19"],
-  "current_stage": 5,
-  "pipeline_stage": "05-dependencies",
+  "current_stage": 6,
+  "pipeline_stage": "06-planning",
   "docs_branch": "feature/SKILL-2-cert-parsing",
   "target_repositories": [
     {
@@ -27,7 +27,7 @@
     }
   ],
   "stages": {
-    "5": {"status": "pending", "agent": "nulogic-dependency-checker"},
+    "5": {"status": "complete", "agent": "nulogic-dependency-checker", "completed_at": "2026-06-07T00:00:00Z"},
     "6a": {"status": "pending", "agent": "nulogic-implementation-planner"},
     "6b": {"status": "pending", "agent": "nulogic-implementation-reviewer"},
     "7a": {"status": "pending", "agent": "nulogic-test-creator"},
