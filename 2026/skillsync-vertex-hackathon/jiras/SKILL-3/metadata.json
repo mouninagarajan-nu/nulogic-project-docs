@@ -7,18 +7,41 @@
   "t_shirt": "L",
   "priority": "Highest",
   "status": "Backlog",
+  "lifecycle_status": "In Progress",
   "blocks": ["SKILL-4"],
   "blocked_by": [],
   "blocked_by_resolved": ["SKILL-1"],
   "acs": ["AC-04", "AC-05", "AC-06", "AC-21"],
   "business_rules": ["BR-03", "BR-04", "BR-05", "BR-09", "BR-12"],
+  "owner": "mouni.nagarajan@nulogic.io",
+  "current_stage": 5,
+  "pipeline_stage": "05-dependencies",
+  "docs_branch": "feature/SKILL-3-staffing-matcher",
+  "local_only": true,
   "target_repositories": [
     {
       "name": "ai-nu-skillsync",
+      "organization": "NUTechnolgyInc",
+      "url": "git@github.com:NUTechnolgyInc/ai-nu-skillsync.git",
       "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
-      "branch": null,
-      "url": "LOCAL-ONLY"
+      "branch": "feature/SKILL-3-staffing-matcher"
     }
   ],
-  "created_at": "2026-06-05T00:00:00Z"
+  "stages": {
+    "5": {"status": "pending", "agent": "nulogic-dependency-checker"},
+    "6a": {"status": "pending", "agent": "nulogic-implementation-planner"},
+    "6b": {"status": "pending", "agent": "nulogic-implementation-reviewer"},
+    "7a": {"status": "pending", "agent": "nulogic-test-creator"},
+    "7b": {"status": "pending", "agent": "nulogic-test-reviewer"},
+    "8a": {"status": "pending", "agent": "nulogic-code-writer"},
+    "8b": {"status": "pending", "agent": "nulogic-code-reviewer"},
+    "9": {"status": "pending", "agent": "nulogic-quality-gate-validator"},
+    "10": {"status": "pending", "agent": "(built-in)"},
+    "11": {"status": "pending", "agent": "nulogic-pr-assembler"},
+    "12": {"status": "pending", "agent": "nulogic-deployment-agent"}
+  },
+  "review_overrides": {},
+  "blocking_conditions": [],
+  "created_at": "2026-06-05T00:00:00Z",
+  "activated_at": "2026-06-08T00:00:00Z"
 }

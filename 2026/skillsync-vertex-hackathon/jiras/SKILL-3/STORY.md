@@ -15,8 +15,9 @@
 | **Component** | Matching service, Claude integration (Opus + caching), role-scoped dataset builder |
 | **Target Repository** | ai-nu-skillsync |
 | **Gaps Closed** | TD-MATCH-01, TD-DATA-04 (matcher reads seniority/timezone) |
-| **Owner** | -- |
-| **Status** | Backlog |
+| **Owner** | mouni.nagarajan@nulogic.io |
+| **Started At** | 2026-06-08T00:00:00Z |
+| **Status** | In Progress |
 
 ## User Story
 
