@@ -1,0 +1,294 @@
+{
+  "jira_id": "SKILL-1",
+  "stage": "06-implementation-planning",
+  "generated_by": "nulogic-implementation-planner",
+  "built_from": { "target_state_architecture": "v1", "acceptance_tests": "v1", "story": "STORY.md+SUB-TASK-1/2/3" },
+  "counts": { "phases": 4, "scenarios": 20 },
+  "notes": "Foundation GREEN-gate scenarios for SKILL-1 substrate. Trust-state values are persisted UPPERCASE (SELF_REPORTED|MANAGER_APPROVED|VERIFIED) per Page 03 §3.1; the authored e2e stubs use hyphen-case and are bridged by a value map (TACTICAL-ADR-01). Claude client is INJECTED as a double in tests; no live API call. Tests run against a disposable seeded SQLite DB, never the shared dev.db.",
+  "phases": [
+    {
+      "phase": 0,
+      "name": "Baseline (RED)",
+      "scenarios": [
+        {
+          "scenario_id": "TS-P0-01",
+          "title": "Vitest harness runs and finds no foundation tests yet",
+          "test_type": "harness",
+          "priority": "P1",
+          "ac_refs": [],
+          "br_refs": [],
+          "given": "a fresh feature/SKILL-1-foundation checkout with no tests/ dir",
+          "when": "pnpm test runs",
+          "then": "Vitest executes and reports zero test files (honest pre-state); db:push applies the 6 starter models; typecheck + lint clean",
+          "test_file": "n/a (baseline capture)",
+          "test_function": "baseline"
+        }
+      ]
+    },
+    {
+      "phase": 1,
+      "name": "Schema extension, synthetic seed, fixtures, doc/env reconcile (SUB-TASK-1)",
+      "scenarios": [
+        {
+          "scenario_id": "TS-P1-01",
+          "title": "Extended schema applies via db:push with starter invariants intact",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac_refs": ["AC-16"],
+          "br_refs": ["BR-18", "BR-19"],
+          "given": "the extended prisma/schema.prisma",
+          "when": "pnpm db:push runs and the client is regenerated to lib/generated/prisma",
+          "then": "the 6 starter models persist with EmployeeSkill @@unique([employeeId,skillId]), Enrollment @@unique, Skill.name @unique and the leadId self-relation intact; new models Resume/UpskillingPlan/PlanItem/IdentityMapping exist; Skill.canonicalKey @unique, Certificate/Resume @@unique([employeeId,contentHash]), UpskillingPlan @@unique([employeeId]), IdentityMapping.syntheticHandle @unique are declared",
+          "test_file": "tests/foundation/schema-invariant.test.ts",
+          "test_function": "schema applies with all unique constraints"
+        },
+        {
+          "scenario_id": "TS-P1-02",
+          "title": "Seed produces 20-25 profiles with baseline skills + availability",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac_refs": ["AC-16"],
+          "br_refs": ["BR-16"],
+          "given": "a fresh seeded disposable DB",
+          "when": "the synthetic seed runs with the fixed RNG seed",
+          "then": "20-25 Employee rows exist, each carrying >=1 EmployeeSkill with origin=BASELINE/trustState=SELF_REPORTED, an allocation (0-100), a freeFrom (mix past/+2wk/future), seniority and timezone (some IST)",
+          "test_file": "tests/foundation/baseline-skills.test.ts",
+          "test_function": "every seeded profile has baseline skills + freeFrom + allocation"
+        },
+        {
+          "scenario_id": "TS-P1-03",
+          "title": "Catalog seeded with aiEnabled deliberately set (>=1 true)",
+          "test_type": "integration",
+          "priority": "P1",
+          "ac_refs": ["AC-26"],
+          "br_refs": ["BR-11"],
+          "given": "a seeded catalog of ~12-20 items",
+          "when": "the catalog is inspected",
+          "then": "every CatalogItem.aiEnabled is a real boolean and at least one is true (so the downstream plan-gate can be satisfied)",
+          "test_file": "tests/foundation/baseline-skills.test.ts",
+          "test_function": "catalog has aiEnabled set with at least one true"
+        },
+        {
+          "scenario_id": "TS-P1-04",
+          "title": "One synthetic IdentityMapping per employee, no real PII",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac_refs": ["AC-13", "AC-14"],
+          "br_refs": ["BR-10"],
+          "given": "a seeded DB",
+          "when": "IdentityMapping rows are inspected",
+          "then": "one mapping per employee keyed by a synthetic handle (handle-prefixed), never a real email/PII",
+          "test_file": "tests/foundation/no-pii.test.ts",
+          "test_function": "identity mappings keyed by synthetic handles only"
+        },
+        {
+          "scenario_id": "TS-P1-05",
+          "title": "Seed never emits real-domain emails or PII",
+          "test_type": "review",
+          "priority": "P0",
+          "ac_refs": ["AC-13"],
+          "br_refs": ["BR-10"],
+          "given": "all seeded Employee.name/email",
+          "when": "scanned by the no-PII gate",
+          "then": "no value matches a real-domain pattern (gmail/yahoo/outlook/hotmail etc.); emails are synthetic *.test or example.* only",
+          "test_file": "tests/foundation/no-pii.test.ts",
+          "test_function": "no real-domain email in seed"
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Claude boundary, prompts/schemas scaffold, repository path (SUB-TASK-2)",
+      "scenarios": [
+        {
+          "scenario_id": "TS-P2-01",
+          "title": "Wrapper returns Ok(typed) on valid model output",
+          "test_type": "unit",
+          "priority": "P0",
+          "ac_refs": ["AC-13"],
+          "br_refs": ["BR-09"],
+          "given": "callClaude with a per-call Zod schema and an injected client returning a valid scripted JSON payload",
+          "when": "the response passes through the wrapper",
+          "then": "schema.safeParse succeeds and a typed Ok(data) is returned; the call boundary was invoked exactly once",
+          "test_file": "tests/foundation/wrapper-gate.test.ts",
+          "test_function": "valid payload -> Ok(typed)"
+        },
+        {
+          "scenario_id": "TS-P2-02",
+          "title": "Wrapper returns Failure and writes nothing on garbled JSON",
+          "test_type": "unit",
+          "priority": "P0",
+          "ac_refs": ["AC-03", "AC-06", "AC-20"],
+          "br_refs": ["BR-09"],
+          "given": "an injected client returning malformed JSON (makeClaudeClientGarbled equivalent)",
+          "when": "the response passes through the wrapper",
+          "then": "extractStructuredBlock + safeParse fail and a typed Failure(promptName, requestId) is returned; nothing is persisted; no raw model text reaches a write path",
+          "test_file": "tests/foundation/wrapper-gate.test.ts",
+          "test_function": "garbled payload -> Failure, no write"
+        },
+        {
+          "scenario_id": "TS-P2-03",
+          "title": "Wrapper maps an SDK throw to Failure",
+          "test_type": "unit",
+          "priority": "P1",
+          "ac_refs": ["AC-06"],
+          "br_refs": ["BR-09"],
+          "given": "an injected client whose createMessage throws (network/5xx/rate-limit)",
+          "when": "callClaude is invoked",
+          "then": "the throw is caught at the boundary and mapped to a typed Failure; it never bubbles raw to a write path; logged with requestId",
+          "test_file": "tests/foundation/wrapper-gate.test.ts",
+          "test_function": "SDK throw -> Failure"
+        },
+        {
+          "scenario_id": "TS-P2-04",
+          "title": "Sub-threshold confidence is treated as Failure",
+          "test_type": "unit",
+          "priority": "P0",
+          "ac_refs": ["AC-03"],
+          "br_refs": ["BR-09"],
+          "given": "a schema-valid payload whose confidence is below threshold",
+          "when": "callClaude validates it",
+          "then": "the wrapper returns Failure (write nothing), consistent with the AC-03/06/20 single rule",
+          "test_file": "tests/foundation/wrapper-gate.test.ts",
+          "test_function": "low confidence -> Failure"
+        },
+        {
+          "scenario_id": "TS-P2-05",
+          "title": "Model routing: Opus only for match-staffing; ids from config",
+          "test_type": "unit",
+          "priority": "P0",
+          "ac_refs": ["AC-04"],
+          "br_refs": ["BR-12"],
+          "given": "the route(complexity) function and config-provided model ids",
+          "when": "route('hard') and route('routine') are called",
+          "then": "route('hard') returns the Opus id and route('routine') returns the Sonnet id; no model id is hardcoded inside business logic",
+          "test_file": "tests/foundation/wrapper-gate.test.ts",
+          "test_function": "route maps complexity to configured model ids"
+        },
+        {
+          "scenario_id": "TS-P2-06",
+          "title": "Aliases collapse to one canonical Skill id",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac_refs": ["AC-22"],
+          "br_refs": ["BR-18"],
+          "given": "a seeded alias mapping where TS resolves to TypeScript's canonicalKey",
+          "when": "resolveCanonicalSkill('TypeScript') and resolveCanonicalSkill('TS') are called",
+          "then": "both return the same canonical Skill.id (deterministic Layer 1 key, Claude Layer 2 as advisor only)",
+          "test_file": "tests/foundation/schema-invariant.test.ts",
+          "test_function": "TypeScript and TS resolve to one canonical id"
+        },
+        {
+          "scenario_id": "TS-P2-07",
+          "title": "upsertAndPromoteSkill promotes in place, never demotes, never duplicates",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac_refs": ["AC-22"],
+          "br_refs": ["BR-18"],
+          "given": "a profile already holding a canonical skill at SELF_REPORTED (or MANAGER_APPROVED)",
+          "when": "upsertAndPromoteSkill is called with a higher targetState, then again with an equal-or-lower targetState",
+          "then": "the first call promotes the SAME row (sets trustState + promotedAt), the second is a no-op that never demotes, and only one EmployeeSkill row exists for (employeeId, canonicalSkillId)",
+          "test_file": "tests/foundation/schema-invariant.test.ts",
+          "test_function": "single-record monotonic promotion"
+        },
+        {
+          "scenario_id": "TS-P2-08",
+          "title": "skill-identity failure falls back to create-new, write never blocks (TS-002)",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac_refs": ["AC-22"],
+          "br_refs": ["BR-18"],
+          "given": "resolveCanonicalSkill with a Layer-2 skill-identity call that fails/returns invalid schema",
+          "when": "a new (non-aliased) skill name is resolved",
+          "then": "the path falls back to create-new keyed by the deterministic canonicalKey + markReconcilePending(key); a new canonical Skill.id is returned; the write completes without throwing or hanging",
+          "test_file": "tests/foundation/schema-invariant.test.ts",
+          "test_function": "de-dupe failure fallback create-new + reconcilePending"
+        }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Vitest harness, single-file command, foundation tests + no-PII gate (SUB-TASK-3)",
+      "scenarios": [
+        {
+          "scenario_id": "TS-P3-01",
+          "title": "Schema-invariant foundation test green on seeded DB",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac_refs": ["AC-22"],
+          "br_refs": ["BR-18"],
+          "given": "a freshly seeded disposable DB",
+          "when": "TypeScript and TS are resolved and a second upsertAndPromoteSkill runs for the same (profile, skill)",
+          "then": "exactly one canonical Skill.id and exactly one EmployeeSkill row result (Scenario D)",
+          "test_file": "tests/foundation/schema-invariant.test.ts",
+          "test_function": "BR-18 single-record invariant"
+        },
+        {
+          "scenario_id": "TS-P3-02",
+          "title": "No-PII gate scans seed + fixtures + env-secrets",
+          "test_type": "review",
+          "priority": "P0",
+          "ac_refs": ["AC-13"],
+          "br_refs": ["BR-10"],
+          "given": "loadSeedProfiles(), scanRepoForHardcodedSecrets(), secretEnvVarNames() from lib/dev/guardrails",
+          "when": "the gate runs",
+          "then": "each object returned by loadSeedProfiles() exposes ONLY the no-PII-safe projection (handle + email, with synthetic handle-prefixed handles and no real-domain emails) and contains NO name-like key (name is projected away even though the Employee row keeps its name column) (R2-03); no hardcoded secret literal in tracked source; secretEnvVarNames includes ANTHROPIC_API_KEY and a GOOGLE...CLIENT...(ID|SECRET) name; .env.example holds placeholders only",
+          "test_file": "tests/foundation/no-pii.test.ts",
+          "test_function": "AC-13 guardrail executable"
+        },
+        {
+          "scenario_id": "TS-P3-03",
+          "title": "Wrapper validation-gate proves no write on bad output",
+          "test_type": "unit",
+          "priority": "P0",
+          "ac_refs": ["AC-13"],
+          "br_refs": ["BR-09"],
+          "given": "the wrapper with an injected SDK double",
+          "when": "fed a deliberately invalid payload then a valid one",
+          "then": "invalid -> Failure with nothing persisted; valid -> Ok(typed)",
+          "test_file": "tests/foundation/wrapper-gate.test.ts",
+          "test_function": "validate-before-write"
+        },
+        {
+          "scenario_id": "TS-P3-04",
+          "title": "Baseline-skills foundation test green",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac_refs": ["AC-16"],
+          "br_refs": ["BR-16"],
+          "given": "the seeded profiles",
+          "when": "each profile is inspected",
+          "then": "every profile has >=1 origin=BASELINE skill plus a freeFrom and allocation; baseline distinct from any ACQUIRED skill",
+          "test_file": "tests/foundation/baseline-skills.test.ts",
+          "test_function": "AC-16 data half"
+        },
+        {
+          "scenario_id": "TS-P3-05",
+          "title": "Single-file test command runs one test in isolation",
+          "test_type": "harness",
+          "priority": "P1",
+          "ac_refs": [],
+          "br_refs": [],
+          "given": "the documented single-file command (pnpm test <file> -> vitest run <file>)",
+          "when": "invoked against one foundation test file",
+          "then": "only that file's tests run; a non-existent path surfaces a no-tests-found hint",
+          "test_file": "tests/foundation/wrapper-gate.test.ts",
+          "test_function": "single-file isolation (CLAUDE.md requirement)"
+        },
+        {
+          "scenario_id": "TS-P3-06",
+          "title": "Tests never hit the live Anthropic API or the shared dev.db",
+          "test_type": "harness",
+          "priority": "P1",
+          "ac_refs": ["AC-13"],
+          "br_refs": ["BR-09", "BR-10"],
+          "given": "the Vitest globalSetup (tests/setup/global-db.ts) which, before any test module imports the Prisma client, overrides process.env.DATABASE_URL to a unique per-run temp file (file:./.tmp/test-<pid>-<ts>.db) and runs prisma db push + seed against it (CLI resolves the URL via prisma.config.ts); lib/repos/db.ts constructs the runtime client as new PrismaClient({ datasourceUrl: process.env.DATABASE_URL }) because the schema datasource has no url/env() and prisma.config.ts is CLI-only; and the per-test setup (tests/setup/db.ts) which guards that DATABASE_URL is set, is NOT file:./dev.db, and does not end in /dev.db",
+          "when": "the suite runs and a test re-seeds the DB",
+          "then": "the Claude client is an injected double (no live ANTHROPIC_API_KEY use; fail loudly if detected); the runtime PrismaClient is bound to the temp DB via its explicit datasourceUrl, so every read/write and re-seed hits the disposable temp DB, never the shared dev.db (the dev.db guard fails loudly if the override did not take, so a re-seed cannot false-green against dev.db); globalSetup teardown deletes the temp file",
+          "test_file": "tests/setup/db.ts",
+          "test_function": "isolated per-run DB (DATABASE_URL override + dev.db guard) + stubbed SDK"
+        }
+      ]
+    }
+  ]
+}

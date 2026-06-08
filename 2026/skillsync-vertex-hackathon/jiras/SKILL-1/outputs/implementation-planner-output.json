@@ -1,0 +1,132 @@
+{
+  "status": "success",
+  "jira_id": "SKILL-1",
+  "stage": "06-implementation-planning",
+  "agent": "nulogic-implementation-planner",
+  "local_only": true,
+  "next_stage_ready": true,
+  "tactical_adrs_created": true,
+  "tactical_adrs_count": 3,
+  "validation_passed": true,
+  "built_from": {
+    "target_state_architecture": "v1",
+    "acceptance_tests": "v1",
+    "story": "STORY.md + SUB-TASK-1/2/3",
+    "dependency_report": "v1"
+  },
+  "notes": "Iteration 3 — reviewer findings R2-01/R2-02/R2-03 resolved. R2-01 (count drift inside test-scenarios.json): the header counts field said scenarios:18 while 20 scenario_ids are enumerated; fixed to scenarios:20 so the artifact is internally consistent and matches plan/output/STORY/metadata. R2-02 (test-DB mechanism mis-described, load-bearing): VERIFIED in code that prisma/schema.prisma:9-11 declares 'datasource db { provider = \"sqlite\" }' with NO url and NO env(), and prisma.config.ts:11-13 (datasource.url: process.env[\"DATABASE_URL\"]) governs only the Prisma CLI, not the generated runtime client. So the in-test runtime client does NOT auto-pick-up the globalSetup DATABASE_URL override; pinned the mechanism: lib/repos/db.ts MUST construct the singleton as new PrismaClient({ datasourceUrl: process.env.DATABASE_URL }). Documented this in the plan (discovery table, Phase 3 test-harness section, Phase 2/3 FORMAT lines, db.ts file-checklist entry), the corrected F-02 non-deviation note in tactical-adrs.md, and the TS-P3-06 scenario. The dev.db guard (DATABASE_URL set, != file:./dev.db, not ending /dev.db) remains. R2-03 (loadSeedProfiles shape under-specified): specified in the plan (guardrails checklist + Wiring Trace + AC-13 mechanism map) and in TS-P3-02 that loadSeedProfiles() must project away name and return only the no-PII-safe projection (handle/email, no name-like key) even though the Employee row keeps its name column. Iteration-3 deviation re-scan: no new divergence; tactical_adrs_count remains 3. Carry-forward from iteration 2: F-01 (tsx executor + Prisma v7 migrations.seed runner) and the F-02 globalSetup disposable per-run DB remain in place; total count 20 scenarios (P0:1 + P1:5 + P2:8 + P3:6).",
+  "iteration": 3,
+  "review_findings_resolved": ["F-01", "F-02", "F-03", "R2-01", "R2-02", "R2-03"],
+  "phases": [
+    { "phase": 0, "name": "Baseline (RED)", "sub_task": null, "scenario_count": 1 },
+    { "phase": 1, "name": "Schema extension, synthetic seed, fixtures, doc/env reconcile", "sub_task": "SUB-TASK-1", "scenario_count": 5 },
+    { "phase": 2, "name": "Claude boundary, prompts/schemas scaffold, repository path", "sub_task": "SUB-TASK-2", "scenario_count": 8 },
+    { "phase": 3, "name": "Vitest harness, single-file command, foundation tests + no-PII gate", "sub_task": "SUB-TASK-3", "scenario_count": 6 }
+  ],
+  "counts": {
+    "phases": 4,
+    "test_scenarios": 20,
+    "files_create": 38,
+    "files_modify": 6
+  },
+  "test_scenarios": [
+    "TS-P0-01", "TS-P1-01", "TS-P1-02", "TS-P1-03", "TS-P1-04", "TS-P1-05",
+    "TS-P2-01", "TS-P2-02", "TS-P2-03", "TS-P2-04", "TS-P2-05", "TS-P2-06", "TS-P2-07", "TS-P2-08",
+    "TS-P3-01", "TS-P3-02", "TS-P3-03", "TS-P3-04", "TS-P3-05", "TS-P3-06"
+  ],
+  "files_planned": [
+    { "path": "prisma/schema.prisma", "action": "modify", "decision": "EXTEND" },
+    { "path": "prisma/seed.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "prisma.config.ts", "action": "modify", "decision": "EXTEND", "note": "add migrations.seed='tsx prisma/seed.ts' (F-01)" },
+    { "path": ".gitignore", "action": "modify", "decision": "EXTEND", "note": "add .tmp/ for per-run disposable test DB (F-02)" },
+    { "path": "package.json", "action": "modify", "decision": "EXTEND", "note": "add tsx devDependency (F-01); seed script = 'prisma db push && prisma db seed'" },
+    { "path": ".env.example", "action": "modify", "decision": "EXTEND" },
+    { "path": "CLAUDE.md", "action": "modify", "decision": "EXTEND" },
+    { "path": "lib/repos/db.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "lib/repos/skill.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "lib/ai/claude.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "lib/ai/route.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "lib/ai/canonical-key.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "lib/domain/trust-state.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "lib/dev/guardrails.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/prompts/system.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/prompts/parse-certificate.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/prompts/parse-resume.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/prompts/match-staffing.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/prompts/catalog-dedupe.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/prompts/catalog-enrich.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/prompts/recommend-items.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/prompts/summarize-progress.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/prompts/skill-identity.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/schemas/index.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/schemas/CertParseResult.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/schemas/ResumeParseResult.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/schemas/MatchResult.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/schemas/DedupeDecision.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/schemas/CatalogEnrichment.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/schemas/Recommendations.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/schemas/ProgressSummary.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "src/schemas/SkillIdentityDecision.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "vitest.config.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "tests/setup/global-db.ts", "action": "create", "decision": "BUILD-NEW", "note": "F-02: Vitest globalSetup — override DATABASE_URL to per-run temp file before client init, db push + seed, teardown delete" },
+    { "path": "tests/setup/db.ts", "action": "create", "decision": "BUILD-NEW", "note": "F-02: per-test client import + reset helpers + dev.db guard" },
+    { "path": "tests/foundation/schema-invariant.test.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "tests/foundation/no-pii.test.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "tests/foundation/wrapper-gate.test.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "tests/foundation/baseline-skills.test.ts", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "fixtures/certs/aws-saa-valid.pdf", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "fixtures/certs/multi-skill-bootcamp.pdf", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "fixtures/certs/not-a-cert.png", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "fixtures/resumes/synthetic-engineer.pdf", "action": "create", "decision": "BUILD-NEW" },
+    { "path": "fixtures/resumes/garbled.png", "action": "create", "decision": "BUILD-NEW" }
+  ],
+  "open_items": [
+    { "id": "OI-01", "severity": "P2", "note": "reconcilePending has no named column in arch ERD (MISSING_IN_ARCH). SKILL-1 returns/logs it as a flag; persistence deferred to a later reconcile-pass story. Non-blocking — no SKILL-1 AC requires it." }
+  ],
+  "gaps": {
+    "p0": [],
+    "p1": [],
+    "p2": ["reconcilePending not persisted (OI-01)", "identifier/value-set bridge (resolved by TACTICAL-ADR-01)"]
+  },
+  "artifacts": [
+    "artifacts/06-planning/implementation-plan.md",
+    "artifacts/06-planning/test-scenarios.json",
+    "artifacts/06-planning/tactical-adrs.md"
+  ],
+  "events": [
+    {
+      "type": "implementation_plan_created",
+      "phases_count": 4,
+      "test_scenarios_count": 18,
+      "files_create_count": 36,
+      "files_modify_count": 5,
+      "validation_passed": true,
+      "tactical_adrs_created": true,
+      "tactical_adrs_count": 2
+    },
+    {
+      "type": "implementation_plan_revised",
+      "iteration": 2,
+      "findings_resolved": ["F-01", "F-02", "F-03"],
+      "phases_count": 4,
+      "test_scenarios_count": 20,
+      "files_create_count": 38,
+      "files_modify_count": 6,
+      "validation_passed": true,
+      "tactical_adrs_created": true,
+      "tactical_adrs_count": 3
+    },
+    {
+      "type": "implementation_plan_revised",
+      "iteration": 3,
+      "findings_resolved": ["R2-01", "R2-02", "R2-03"],
+      "phases_count": 4,
+      "test_scenarios_count": 20,
+      "files_create_count": 38,
+      "files_modify_count": 6,
+      "validation_passed": true,
+      "tactical_adrs_created": true,
+      "tactical_adrs_count": 3
+    }
+  ]
+}

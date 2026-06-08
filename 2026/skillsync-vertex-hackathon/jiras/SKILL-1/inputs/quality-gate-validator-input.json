@@ -1,0 +1,31 @@
+{
+  "jira_id": "SKILL-1",
+  "workflow_stage": "quality-validation",
+  "local_only": true,
+  "story_type": "foundation / data-infra (no deployed service, no UI, no production monitoring infra)",
+  "target_repo_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+  "coverage_targets": {
+    "overall": 40,
+    "new_code": 45,
+    "branch": 40,
+    "critical_paths": 75,
+    "_note": "Hackathon-relaxed per user (overrides the agent default of 85%). Critical paths = Claude validate-before-write boundary (BR-09), single-record invariant (BR-18), no-PII gate (BR-10)."
+  },
+  "performance_slos": {
+    "p95_ms": 200,
+    "max_regression_pct": 20,
+    "_note": "Defaults. LOCAL-ONLY foundation story has no running service surface; treat perf as STATIC analysis only (N+1, missing indexes, resource leaks) and advisory, not a runtime FAIL."
+  },
+  "sre_context": "LOCAL-ONLY foundation story: no deployed environment, dashboards, or alerting infra exist or are in scope for SKILL-1. Assess only in-code observability hooks (the Claude call-boundary logging required by BR-09/observability NFR). Absent production monitoring infra is NOT-APPLICABLE / advisory, not a FAIL.",
+  "local_integration": {
+    "skip_human_gate": true,
+    "_note": "No deployable runtime service for the foundation story; the Vitest foundation suite IS the integration evidence. Treat as skipped/pass if no startable service applies."
+  },
+  "context": {
+    "previous_artifacts": [
+      "artifacts/08-implementation/implementation-summary.md",
+      "artifacts/07-tests/",
+      "artifacts/06-planning/"
+    ]
+  }
+}

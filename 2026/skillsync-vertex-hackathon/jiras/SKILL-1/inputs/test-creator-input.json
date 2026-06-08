@@ -1,0 +1,31 @@
+{
+  "jira_id": "SKILL-1",
+  "workflow_stage": "test-creation",
+  "local_only": true,
+  "coverage_targets": {
+    "overall": 40,
+    "new_code": 45,
+    "branch": 40,
+    "critical_paths": 75,
+    "_note": "Hackathon-relaxed per user. Critical paths kept at 75% because they encode the non-negotiables: Claude validate-before-write boundary (BR-09), single canonical-record invariant (BR-18), and no-PII gate (BR-10)."
+  },
+  "carry_forward_constraints": [
+    {
+      "id": "R3-01",
+      "severity": "high",
+      "source": "stage-6 implementation-reviewer (user-accepted gap)",
+      "constraint": "Synthetic handles MUST use the literal prefix 'synthetic-handle-' (e.g. synthetic-handle-007). Tests TS-P1-04 and TS-P3-02 MUST assert /^synthetic-handle-/, NOT 'handle-<n>'."
+    }
+  ],
+  "context": {
+    "initiative_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/02-acceptance-tests/"
+    ],
+    "previous_artifacts": [
+      "artifacts/06-planning/implementation-plan.md",
+      "artifacts/06-planning/test-scenarios.json",
+      "artifacts/06-planning/tactical-adrs.md"
+    ],
+    "target_repo_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync"
+  }
+}

@@ -6,18 +6,74 @@
   "story_points": 8,
   "t_shirt": "L",
   "priority": "Highest",
-  "status": "Backlog",
+  "status": "Done",
+  "lifecycle_status": "Done",
+  "owner": "mouni.nagarajan@nulogic.io",
   "blocks": ["SKILL-2", "SKILL-3", "SKILL-5", "SKILL-6"],
   "blocked_by": [],
   "acs": ["AC-13", "AC-16"],
   "business_rules": ["BR-09", "BR-10", "BR-12", "BR-16", "BR-18", "BR-19"],
+  "current_stage": 12,
+  "pipeline_stage": "12-deployment",
+  "docs_branch": "feature/SKILL-1-foundation",
   "target_repositories": [
     {
       "name": "ai-nu-skillsync",
       "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
-      "branch": null,
+      "branch": "feature/SKILL-1-foundation",
       "url": "LOCAL-ONLY"
     }
   ],
-  "created_at": "2026-06-05T00:00:00Z"
+  "stages": {
+    "5": {"status": "complete", "agent": "nulogic-dependency-checker", "completed_at": "2026-06-06T00:00:00Z"},
+    "6a": {"status": "complete", "agent": "nulogic-implementation-planner"},
+    "6b": {"status": "complete", "agent": "nulogic-implementation-reviewer"},
+    "6": {"convergence_override": "user_accepted", "convergence_loop": {"current_iteration": 3, "max_iterations": 3, "min_iterations": 1, "loop_status": "max_iterations_reached", "last_doer_completed": "2026-06-06T00:00:00Z", "last_reviewer_completed": "2026-06-06T00:00:00Z", "last_reviewer_result": {"next_stage_ready": false, "total_findings": 1, "status": "needs_revision", "iteration": 3, "open_findings": [{"id": "R3-01", "severity": "high", "description": "synthetic-handle prefix mismatch: plan/SUB-TASK-1 say handle-<n> but AC-13 test asserts /^synthetic-handle-/"}]}, "next_stage_ready": false}, "accepted_gaps": [{"id": "R3-01", "severity": "high", "carry_forward_to": ["7", "8"], "constraint": "Seed MUST emit synthetic handles with literal prefix 'synthetic-handle-' (e.g. synthetic-handle-007), NOT 'handle-<n>'. Stage 7 test-creator must assert /^synthetic-handle-/ in TS-P1-04 and TS-P3-02; Stage 8 code-writer must implement it."}]},
+    "7a": {"status": "complete", "agent": "nulogic-test-creator"},
+    "7b": {"status": "complete", "agent": "nulogic-test-reviewer"},
+    "7": {"convergence_loop": {"current_iteration": 2, "max_iterations": 3, "min_iterations": 1, "loop_status": "converged", "last_doer_completed": "2026-06-07T00:00:00Z", "last_reviewer_completed": "2026-06-07T00:00:00Z", "last_reviewer_result": {"next_stage_ready": true, "total_findings": 0, "status": "approved", "iteration": 2}, "next_stage_ready": true}},
+    "8a": {"status": "complete", "agent": "nulogic-code-writer"},
+    "8b": {"status": "complete", "agent": "nulogic-code-reviewer"},
+    "8": {"convergence_loop": {"current_iteration": 3, "max_iterations": 3, "min_iterations": 2, "loop_status": "converged", "last_doer_completed": "2026-06-07T00:00:00Z", "last_reviewer_completed": "2026-06-07T00:00:00Z", "last_reviewer_result": {"next_stage_ready": true, "total_findings": 0, "status": "approved", "iteration": 3}, "next_stage_ready": true}, "code_commits": ["f447ad4", "e89dae1"]},
+    "9": {"status": "complete", "agent": "nulogic-quality-gate-validator", "completed_at": "2026-06-07T00:00:00Z", "gates_passed": true},
+    "10": {"status": "complete", "agent": "(built-in)", "completed_at": "2026-06-07T00:00:00Z"},
+    "11": {"status": "complete", "agent": "nulogic-pr-assembler", "completed_at": "2026-06-07T00:00:00Z", "pr_opened": false, "pr_package": "artifacts/11-pr/PR.md"},
+    "12": {"status": "skipped", "agent": "nulogic-deployment-agent", "reason": "local-only, no deploy target; story finalized as Done after PR assembly per user", "completed_at": "2026-06-07T00:00:00Z"}
+  },
+  "review_overrides": {},
+  "blocking_conditions": [],
+  "progress_log": [
+    {
+      "timestamp": "2026-06-05T00:00:00Z",
+      "stage": "01-jira-create",
+      "agent": "nulogic-jira-creator",
+      "note": "Story created from PRD + target-state architecture. Local-only run."
+    },
+    {
+      "timestamp": "2026-06-06T00:00:00Z",
+      "stage": "05-dependencies",
+      "agent": "nulogic-dependency-checker",
+      "note": "Dependencies cleared. blocked_by empty, zero merge conflict risk, all prerequisite packages present. dependency_status=READY."
+    },
+    {
+      "timestamp": "2026-06-06T00:00:00Z",
+      "stage": "06-implementation-planning",
+      "agent": "nulogic-implementation-planner",
+      "note": "Plan created. 4 phases (P0 baseline + P1/P2/P3 mapped to SUB-TASK-1/2/3), 18 test scenarios, 41 files planned (36 create + 5 modify). 2 tactical ADRs (value-set bridge, src/ vs lib/ layout). No P0/P1 gaps; 1 P2 open item (reconcilePending not persisted)."
+    },
+    {
+      "timestamp": "2026-06-06T00:00:00Z",
+      "stage": "06-implementation-planning",
+      "agent": "nulogic-implementation-planner",
+      "note": "Plan revised (iteration 2). Resolved reviewer findings: F-01 pinned tsx devDependency + wired Prisma v7 migrations.seed runner (repo had no tsx/ts-node/swc-node); F-02 pinned disposable test DB via Vitest globalSetup that overrides DATABASE_URL to a per-run temp file before the Prisma client initializes, with a dev.db guard so re-seed cannot false-green; F-03 corrected the true test-scenario count to 20 and reconciled the file count to the actual planned set (44 files: 38 create + 6 modify; the prior '36 create' was itself an undercount). 3 tactical ADRs (added ADR-03 for the tsx executor + Prisma v7 seed runner). No P0/P1 gaps."
+    },
+    {
+      "timestamp": "2026-06-06T00:00:00Z",
+      "stage": "06-implementation-planning",
+      "agent": "nulogic-implementation-planner",
+      "note": "Plan revised (iteration 3). Resolved reviewer findings: R2-01 fixed test-scenarios.json header scenarios field (18 -> 20) for internal consistency with the 20 enumerated scenario_ids and plan/output/STORY/metadata. R2-02 (load-bearing) verified in code that prisma/schema.prisma:9-11 has 'datasource db { provider = \"sqlite\" }' with no url/env() and prisma.config.ts:11-13 is CLI-scope only, so the runtime client does NOT auto-pick-up the globalSetup DATABASE_URL override; pinned lib/repos/db.ts to construct new PrismaClient({ datasourceUrl: process.env.DATABASE_URL }) and documented this in the plan discovery table + Phase 2/3 FORMAT + db.ts checklist entry + Phase 3 test-harness section + corrected F-02 non-deviation note + TS-P3-06; dev.db guard retained. R2-03 specified loadSeedProfiles() must project away name (return only the no-PII-safe handle/email projection, no name-like key) in the plan (guardrails checklist + Wiring Trace + AC-13 mechanism map) and TS-P3-02. Deviation re-scan: no new divergence; tactical_adrs_count remains 3. Counts consistent: 4 phases / 20 scenarios / 44 files (38 create + 6 modify) everywhere. No P0/P1 gaps."
+    }
+  ],
+  "created_at": "2026-06-05T00:00:00Z",
+  "activated_at": "2026-06-06T00:00:00Z"
 }

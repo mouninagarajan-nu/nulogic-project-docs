@@ -15,8 +15,10 @@
 | **Component** | Data layer (Prisma/SQLite), Claude integration layer, seed + fixtures, test harness |
 | **Target Repository** | ai-nu-skillsync |
 | **Gaps Closed** | TD-SEED-01, TD-SEED-02, TD-DATA-01, TD-DATA-02, TD-DATA-03, TD-DATA-04, TD-DATA-05, TD-AI-01, TD-AI-02, TD-TEST-01, TD-GUARD-01, TD-DOC-01 |
-| **Owner** | -- |
-| **Status** | Backlog |
+| **Owner** | mouni.nagarajan@nulogic.io |
+| **Started At** | 2026-06-06T00:00:00Z |
+| **Completed At** | 2026-06-07T00:00:00Z |
+| **Status** | Done (pipeline complete through PR; deployment skipped — local-only) |
 
 ## User Story
 
@@ -144,3 +146,8 @@ Status: Awaiting UX designs (UI screens are delivered in SKILL-6). This story is
 | Timestamp | Actor | Note |
 |---|---|---|
 | 2026-06-05T00:00:00Z | nulogic-jira-creator | Story created from PRD + target-state architecture (Phase 1). Local-only run. |
+| 2026-06-06T00:00:00Z | nulogic-dependency-checker | 05-dependencies | Dependencies cleared. blocked_by=[] (no upstream Jiras). Zero merge conflict risk. All prerequisite packages present. 2 non-blocking advisories (seed stub, prisma/ dir pending). dependency_status=READY. |
+| 2026-06-06T00:00:00Z | nulogic-implementation-planner | 06-implementation-planning | Plan created. 4 phases, 18 test scenarios. 41 files planned (36 create / 5 modify). 2 tactical ADRs. No P0/P1 gaps. |
+| 2026-06-06T00:00:00Z | nulogic-implementation-planner | 06-implementation-planning | Plan revised (iteration 2). Resolved reviewer findings F-01 (pin `tsx` devDependency + Prisma v7 `migrations.seed` runner — repo had no TS executor), F-02 (per-run disposable test DB via Vitest globalSetup overriding DATABASE_URL before client init + dev.db guard), F-03 (corrected count to 20 test scenarios). 44 files planned (38 create / 6 modify). 3 tactical ADRs (added ADR-03: tsx executor + Prisma v7 seed runner). No P0/P1 gaps. |
+| 2026-06-07T00:00:00Z | nulogic-pr-assembler | 11-pr | PR package assembled locally (no remote). artifacts/11-pr/PR.md written. 50 files changed, 3808 insertions, 15 deletions. 23/23 tests GREEN. All 5 quality gates PASS. R3-01 resolved. No push/PR (local-only run). ready_for_review=true.
+| 2026-06-06T00:00:00Z | nulogic-implementation-planner | 06-implementation-planning | Plan revised (iteration 3). Resolved reviewer findings R2-01 (fixed test-scenarios.json header `scenarios` field 18→20 for internal consistency), R2-02 (load-bearing: verified schema datasource has no `url`/`env()` and `prisma.config.ts` is CLI-only, so pinned `lib/repos/db.ts` to construct `new PrismaClient({ datasourceUrl: process.env.DATABASE_URL })` — runtime client now honors the globalSetup override; documented in plan, db.ts checklist, test-harness section, and corrected F-02 non-deviation note; dev.db guard retained), R2-03 (`loadSeedProfiles()` must project away `name` and return only the no-PII-safe `handle`/`email` projection — specified in plan + TS-P3-02). Deviation re-scan: no new divergence; 3 tactical ADRs unchanged. Counts: 4 phases / 20 scenarios / 44 files (38 create / 6 modify). No P0/P1 gaps. |
