@@ -1,0 +1,249 @@
+{
+  "jira_id": "SKILL-3",
+  "title": "Staffing Matcher — availability-aware ranked shortlist",
+  "iteration": 3,
+  "generated_by": "nulogic-implementation-planner",
+  "generated_at": "2026-06-08",
+  "intelligence_boundary_rule": "Every ranking/availability judgement is a Claude call (injected double in tests), Zod-validated before use. Tests assert the CALL BOUNDARY + VALIDATION + GRACEFUL FAILURE + result RELATIONSHIPS — never hardcoded keyword/regex/date logic.",
+  "iteration_3_revision_note": "Revised for 2 new reviewer findings (the 6 iteration-2 findings were confirmed RESOLVED): F-01 (CRITICAL) — callClaude runs schema.safeParse(raw) INTERNALLY (claude.ts:132) before the core maps results->shortlist, and the authored test scripts the Claude double with a bare array (AC-04 test:66-87, AC-05 test:127-136) and a shortlist-keyed object (AC-21 test:152-158) which makeClaudeClientSpy JSON.stringifies verbatim; a plain z.object({results:[...]}) would reject them so AC-04/05/21 could never go GREEN. FIX: MatchResult is now z.preprocess(coerceModelShape, z.object({...})) coercing array|{shortlist,...}|{results,...} -> {results,...} BEFORE object validation (entry-level matchPercent 0..100 etc. unchanged; BR-09 intact; TACTICAL-ADR-S3-05). S3-P1-01 updated to assert both coercions + rejection of invalid/legacy shapes. F-02 (LOW) LOC reconciled to ~392 throughout.",
+  "iteration_2_revision_note": "Revised for 6 reviewer findings, each re-verified against the repo: F-01 tests/setup/test-helpers.ts must add loadModule + SYNTHETIC_PROFILES (the authored test imports both; repo file exports only the three makeClaudeClient* doubles); F-02 canonical CoreProfileRecord reconciles the authored profile shape with buildMatchDataset output without dropping trustState/seniority/timezone; F-03 ranking-rules system prompt + dataset go in cacheableContext (claude.ts:118 wires cacheableContext->system), query in the user turn; F-04 roles are ADMIN|MANAGER|PRACTICE_LEAD|EMPLOYEE (no HR token); F-05 AC-24 out-of-scope (deferred SKILL-6); F-06 S3-P3-05 garbled-JSON is ADDITIVE (not in authored test).",
+  "coverage_targets": { "overall": 40, "new": 45, "branch": 40, "critical_paths": 75 },
+  "primary_test_file": "tests/staffing-matcher.test.ts",
+  "single_file_command": "pnpm test tests/staffing-matcher.test.ts",
+  "module_under_test": "@/lib/match/run-staffing-search",
+  "counts": { "phases": 5, "scenarios": 15 },
+  "phases": [
+    {
+      "phase": 0,
+      "name": "Baseline (RED) + harness wiring + helper extension",
+      "goal": "EXTEND tests/setup/test-helpers.ts with loadModule + SYNTHETIC_PROFILES (F-01 — the authored test imports both, the repo file exports neither); adapt the authored staffing-matcher.test.ts into the repo Vitest harness; confirm meaningful RED on the missing core import; wire the single-file command.",
+      "scenarios": [
+        {
+          "scenario_id": "S3-P0-01",
+          "title": "Helper imports resolve and the suite fails RED until the core is implemented",
+          "test_type": "integration",
+          "priority": "P0",
+          "acs": [],
+          "brs": ["BR-09"],
+          "given": "tests/setup/test-helpers.ts now exports loadModule<T>(specifier) + SYNTHETIC_PROFILES (in the authored profile record shape {id,handle,currentProject,allocationPct,freeFrom,skills:[{canonicalSkillId,name,level}]}) ALONGSIDE the three existing makeClaudeClient* doubles; tests/staffing-matcher.test.ts imports { loadModule, SYNTHETIC_PROFILES, makeClaudeClientSpy, makeClaudeClientThatThrows } and loads runStaffingSearch via loadModule('@/lib/match/run-staffing-search')",
+          "when": "the suite runs before the core exists",
+          "then": "the helper imports resolve (F-01 regression closed — without the additive exports the suite could not import) and the suite fails RED at loadModule's dynamic import of the missing core module (a meaningful RED, not a misleading assertion), using no live Anthropic call",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "RED baseline — helper imports + module-under-test import"
+        }
+      ]
+    },
+    {
+      "phase": 1,
+      "name": "Schema + prompt contract",
+      "goal": "Rewrite MatchResult to Page 02 §2.5 + authored-test shape, wrapped in z.preprocess(coerceModelShape, z.object({...})) so the model's bare-array / shortlist-keyed / results-keyed encodings are canonicalized to {results,...} before object validation (F-01, required because callClaude validates raw internally at claude.ts:132); extend match-staffing prompt to render {queryText, datasetJson} with availability + trust-weighting rules.",
+      "scenarios": [
+        {
+          "scenario_id": "S3-P1-01",
+          "title": "MatchResult validates §2.5, COERCES the model's bare-array + shortlist-keyed encodings, and rejects legacy/invalid shapes (F-01)",
+          "test_type": "unit",
+          "priority": "P0",
+          "acs": ["AC-04", "AC-05", "AC-21"],
+          "brs": ["BR-05", "BR-09"],
+          "given": "four payloads exactly as the authored test scripts the Claude double (makeClaudeClientSpy JSON.stringifies them verbatim, so these are what callClaude's internal safeParse sees): (a) canonical { results:[{profileId,matchPercent,matchedSkills[],gaps[],availability,rationale,rank?,inRequestedWindow?}], shortfallNote?, requested? }; (b) a BARE ARRAY of result entries (AC-04 test:66-87 / AC-05 test:127-136); (c) an object keyed { shortlist:[...], shortfallNote } (AC-21 test:152-158); and the negatives: (d) the legacy { matches:[{handle,score}] } stub, (e) an entry with matchPercent out of 0..100",
+          "when": "MatchResult.safeParse is called on each (the schema's z.preprocess(coerceModelShape,...) runs before the inner z.object validation — mirroring callClaude's internal claude.ts:132 gate)",
+          "then": "(a) validates with all BR-05 fields; (b) the bare array is coerced to { results:[...] } and validates; (c) the shortlist key is renamed to results (shortfallNote preserved) and validates; (d) the legacy { matches } shape FAILS (SKILL-1 stub superseded); (e) the out-of-range matchPercent FAILS — coercion did NOT weaken entry-level validation (BR-09 intact)",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "MatchResult schema contract + output-shape coercion"
+        },
+        {
+          "scenario_id": "S3-P1-02",
+          "title": "Ranking rules + dataset are in the cacheable context; the rendered user turn carries the query ONLY (F-03)",
+          "test_type": "unit",
+          "priority": "P1",
+          "acs": ["AC-04"],
+          "brs": ["BR-04", "BR-12"],
+          "given": "the match-staffing template rendered with { queryText } only, and the core's assembled cacheableContext = RANKING_RULES_PROMPT + serialized dataset",
+          "when": "the messages array (renderPrompt) + the cacheableContext (system arg) are assembled",
+          "then": "the RANKING_RULES_PROMPT (instructing ranking over allocation+freeFrom and trust weighting VERIFIED>MANAGER_APPROVED>SELF_REPORTED) AND the serialized dataset appear in the cacheable system context — NOT in the per-request user turn; the per-request queryText is the only content in the user turn; the match-staffing template contains neither the ranking rules nor the dataset (claude.ts:118 wires cacheableContext->system)",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "ranking-rules + dataset cache-breakpoint placement"
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Role-scoped deterministic dataset builder",
+      "goal": "buildMatchDataset(session) -> CoreProfileRecord[] (canonical record, F-02): role-scoped (BR-03; MANAGER/ADMIN->org, PRACTICE_LEAD->team, EMPLOYEE->Denied; no HR token per schema.prisma:15), deterministic, stably-ordered, carrying trustState/seniority/timezone; Employee denied; PL team-only; empty-team safe.",
+      "scenarios": [
+        {
+          "scenario_id": "S3-P2-01",
+          "title": "Practice Lead dataset contains only team members",
+          "test_type": "integration",
+          "priority": "P1",
+          "acs": ["AC-11"],
+          "brs": ["BR-03"],
+          "given": "a PRACTICE_LEAD session whose team is a subset of seeded employees (leadId == caller.id)",
+          "when": "buildMatchDataset(session) assembles the dataset",
+          "then": "only employees with leadId == caller.id are included; no org-wide profiles leak into a PL dataset",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "dataset role-scope — Practice Lead team-only"
+        },
+        {
+          "scenario_id": "S3-P2-02",
+          "title": "Employee role is denied a dataset",
+          "test_type": "integration",
+          "priority": "P0",
+          "acs": ["AC-11"],
+          "brs": ["BR-03"],
+          "given": "an EMPLOYEE session",
+          "when": "buildMatchDataset(session) is invoked",
+          "then": "it returns a Denied marker; no org-wide dataset is ever built for an Employee and no Claude call is made downstream",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "dataset role-scope — Employee denied"
+        },
+        {
+          "scenario_id": "S3-P2-03",
+          "title": "Serialization is deterministic (byte-identical for identical input)",
+          "test_type": "integration",
+          "priority": "P0",
+          "acs": ["AC-04"],
+          "brs": ["BR-12"],
+          "given": "the same in-scope profile set normalized to CoreProfileRecord[]",
+          "when": "serializeDataset is called twice (the loop's before/after re-run)",
+          "then": "the two serialized strings are identical (stable ordering by profileId, skills by canonical name; trustState/seniority/timezone carried deterministically) so the Anthropic prompt-cache key is reused",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "dataset determinism — cache reuse guard"
+        },
+        {
+          "scenario_id": "S3-P2-04",
+          "title": "Practice Lead with no team yields an empty dataset, never an error",
+          "test_type": "integration",
+          "priority": "P2",
+          "acs": ["AC-11"],
+          "brs": ["BR-03"],
+          "given": "a PRACTICE_LEAD session whose leadId matches nobody",
+          "when": "buildMatchDataset(session) runs",
+          "then": "the dataset is empty (no team members) and the builder does not throw",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "dataset role-scope — empty PL team safe"
+        }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Matching core + four branches",
+      "goal": "runStaffingSearch({query,profiles,claude}) → Opus call (dataset cacheable) → MatchResult → happy / hard-match / partial-quantity / failure.",
+      "scenarios": [
+        {
+          "scenario_id": "S3-P3-01",
+          "title": "Availability-aware ranked match — in-window candidate ranks above equally-skilled out-of-window",
+          "test_type": "integration",
+          "priority": "P0",
+          "acs": ["AC-04"],
+          "brs": ["BR-04", "BR-05", "BR-09", "BR-12"],
+          "given": "a Manager query '2 React + Node devs, free now or within 2 weeks, IST overlap' and two candidates in the AUTHORED profile record shape ({id,handle,currentProject,allocationPct,freeFrom,skills:[{canonicalSkillId,name,level}]}) with IDENTICAL skill overlap differing ONLY in availability (p-002 free now / in-window; p-001 free ~6 weeks / out-of-window); the Claude double is scripted with a BARE ARRAY of two entries (equal matchPercent) — makeClaudeClientSpy JSON.stringifies it verbatim, so callClaude's internal safeParse (claude.ts:132) sees a bare array, which MatchResult's coerceModelShape wraps as {results:[...]} (F-01); runStaffingSearch normalizes both profiles via toCoreRecord to CoreProfileRecord (id->profileId, allocationPct->allocation; trustState/seniority/timezone null on this test path)",
+          "when": "runStaffingSearch is invoked with the injected claude double",
+          "then": "claude.createMessage is called exactly once; result.ok is true; each shortlist entry has matchPercent/matchedSkills/gaps/availability/rationale (BR-05); the in-window candidate ranks above the equally-skilled out-of-window one (lower rank number / earlier index) and inRequestedWindow flags the two correctly — proving availability, not skills, drove ordering",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "AC-04 availability-aware ranked match (happy)"
+        },
+        {
+          "scenario_id": "S3-P3-02",
+          "title": "Hard match — closest people + gap/ramp-up, never empty",
+          "test_type": "integration",
+          "priority": "P1",
+          "acs": ["AC-05"],
+          "brs": ["BR-05"],
+          "given": "a niche-skill query where no profile is a perfect fit and the Claude double is scripted with a BARE ARRAY of one entry — the closest person with non-empty gaps and ramp-up wording (AC-05 test:127-136); callClaude's internal safeParse sees the bare array, which coerceModelShape wraps as {results:[...]} (F-01)",
+          "when": "runStaffingSearch is invoked",
+          "then": "result.ok is true; shortlist is non-empty; the top entry carries explicit gaps[] (ramp-up analysis) — never an empty list",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "AC-05 hard match closest + gaps"
+        },
+        {
+          "scenario_id": "S3-P3-03",
+          "title": "Partial-quantity fulfillment — fewer-than-requested qualifiers + shortfallNote",
+          "test_type": "integration",
+          "priority": "P1",
+          "acs": ["AC-21"],
+          "brs": ["BR-05"],
+          "given": "a '3 mid-level React devs free within 2 weeks' query where the Claude double is scripted with a SHORTLIST-KEYED object { shortlist:[2 qualifiers], shortfallNote:'2 of 3 requested qualify' } (AC-21 test:152-158) — callClaude's internal safeParse (claude.ts:132) sees that object, which MatchResult's coerceModelShape renames shortlist->results while preserving shortfallNote (F-01)",
+          "when": "runStaffingSearch is invoked",
+          "then": "result.ok is true; shortlist.length is 2 (not zero, not a silent drop); shortfallNote matches /2 of 3/",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "AC-21 partial-quantity shortfall"
+        },
+        {
+          "scenario_id": "S3-P3-04",
+          "title": "Search failure — Claude unreachable (throws) → retry message, no results",
+          "test_type": "integration",
+          "priority": "P1",
+          "acs": ["AC-06"],
+          "brs": ["BR-09"],
+          "given": "a Claude double that throws (makeClaudeClientThatThrows)",
+          "when": "runStaffingSearch is invoked",
+          "then": "result.ok is false; userMessage is exactly 'Search is temporarily unavailable — please retry.'; no shortlist/results are exposed and no partial/garbled ranking is constructed",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "AC-06 failure — sdk throw"
+        },
+        {
+          "scenario_id": "S3-P3-05",
+          "title": "ADDITIVE (not in authored test) — garbled JSON fails Zod → retry message, no results",
+          "test_type": "integration",
+          "priority": "P1",
+          "acs": ["AC-06"],
+          "brs": ["BR-09"],
+          "additive": true,
+          "additive_rationale": "F-06: the authored test only covers the SDK-throw failure reason (S3-P3-04). This scenario is ADDITIVE coverage for the second distinct callClaude failure reason (extract/parse via makeClaudeClientGarbled) — it is NOT part of the authored acceptance test and is contributed by the planner to harden the AC-06 failure gate.",
+          "given": "a Claude double returning malformed JSON (makeClaudeClientGarbled — already exported by tests/setup/test-helpers.ts)",
+          "when": "runStaffingSearch is invoked",
+          "then": "the callClaude Zod/extract gate fails → result.ok is false with the exact retry message; never coerced/repaired into a shown ranking",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "AC-06 failure — invalid JSON Zod gate (additive)"
+        },
+        {
+          "scenario_id": "S3-P3-06",
+          "title": "Opus routing + dataset-in-cacheable-context",
+          "test_type": "integration",
+          "priority": "P0",
+          "acs": ["AC-04"],
+          "brs": ["BR-12"],
+          "given": "a valid scripted MatchResult and the injected claude double",
+          "when": "runStaffingSearch is invoked",
+          "then": "the boundary (claude.createMessage) is invoked with the Opus model id (route('hard')) and its system arg (= cacheableContext) carries BOTH the RANKING_RULES_PROMPT and the serialized dataset, while the messages user turn carries the per-request query ONLY — asserted via the spy call args (system vs messages). F-03: confirms the ranking rules are cached, not in the user turn.",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "BR-12 Opus + ranking-rules-and-dataset-in-cache assertion"
+        }
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Read-only transport + role gate",
+      "goal": "POST /api/match thin transport: re-derive role server-side (MANAGER/ADMIN->org, PRACTICE_LEAD->team, EMPLOYEE->denied; no HR token), deny Employee, build scoped dataset, delegate to core, no DB writes (TS-003). AC-24 stale-session redirect is OUT OF SCOPE (deferred to SKILL-6, F-05).",
+      "scenarios": [
+        {
+          "scenario_id": "S3-P4-01",
+          "title": "Employee calling the matcher is denied before any model call",
+          "test_type": "integration",
+          "priority": "P0",
+          "acs": ["AC-11"],
+          "brs": ["BR-03"],
+          "given": "an EMPLOYEE-scoped session reaching the match path",
+          "when": "the matcher composition (route → buildMatchDataset) runs for that session",
+          "then": "the Denied path is taken; no dataset is built and no Claude call is made; the Employee receives no results",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "AC-11 Employee denied at transport"
+        },
+        {
+          "scenario_id": "S3-P4-02",
+          "title": "Transport surfaces the retry message on core failure with no partial ranking",
+          "test_type": "integration",
+          "priority": "P1",
+          "acs": ["AC-06"],
+          "brs": ["BR-09"],
+          "given": "the core returns { ok:false, userMessage } (Claude failure)",
+          "when": "the route maps the core result to a response",
+          "then": "the response carries the retry message and no results[]; the handler performs no DB write (TS-003 read-only)",
+          "test_file": "tests/staffing-matcher.test.ts",
+          "test_function": "AC-06 transport failure mapping (read-only)"
+        }
+      ]
+    }
+  ]
+}

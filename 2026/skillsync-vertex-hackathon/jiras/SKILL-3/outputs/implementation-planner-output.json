@@ -1,0 +1,113 @@
+{
+  "jira_id": "SKILL-3",
+  "agent_id": "nulogic-implementation-planner",
+  "status": "success",
+  "iteration": 3,
+  "artifacts": [
+    {
+      "type": "implementation-plan",
+      "path": "artifacts/06-planning/implementation-plan.md",
+      "description": "Iteration-3 revision of the Staffing Matcher plan. The 6 iteration-2 findings were confirmed RESOLVED; this revision resolves 2 new findings (re-verified against the repo): F-01 (CRITICAL) — callClaude runs schema.safeParse(raw) INTERNALLY (claude.ts:132) before the core maps results->shortlist, and the authored test scripts the Claude double with a bare array (AC-04 test:66-87, AC-05 test:127-136) and a shortlist-keyed object (AC-21 test:152-158) which makeClaudeClientSpy JSON.stringifies verbatim, so a plain z.object({results:[...]}) would reject them and AC-04/05/21 could never go GREEN; FIX = MatchResult is now z.preprocess(coerceModelShape, z.object({...})) coercing array|{shortlist,...}|{results,...} -> {results,...} before the unchanged entry-level object validation (matchPercent 0..100 etc. preserved; BR-09 intact); new TACTICAL-ADR-S3-05. F-02 (LOW) — internal LOC drift reconciled to a single ~392 throughout (§1, §8, banner, output JSON). Updated §2.5, §1, Persona note, Phase 1 (S3-P1-01), Phase 3, Wiring Trace, AC Mechanism Map, Risk Mitigation, Standards/Validation. 5 phases (0-4), Spec Contracts Inventory, Reuse Strategy gate table, Wiring Trace, AC Mechanism Map, LOC envelope (~392 vs ~360 budget, overage justified), Release/Pipeline impact, Testing Strategy, File Checklist, Risk Mitigation, Standards Compliance, validation findings."
+    },
+    {
+      "type": "test-scenarios",
+      "path": "artifacts/06-planning/test-scenarios.json",
+      "description": "15 machine-readable GIVEN-WHEN-THEN scenarios across 5 phases for the test-creator, mapped to AC-04/05/06/21/11 and BR-03/04/05/09/12. Iteration-3: S3-P1-01 now asserts MatchResult both validates the canonical {results} shape AND coerces a bare array + a shortlist-keyed object into it, while rejecting the legacy {matches} shape and an entry-level-invalid (matchPercent out of 0..100) payload (F-01); S3-P3-01/02/03 given-clauses updated to feed the exact scripted encodings (bare array / shortlist-keyed object) through the coerceModelShape preprocess. Iteration-2 changes retained (loadModule+SYNTHETIC_PROFILES import resolution; ranking-rules+dataset in cacheableContext; real ADMIN/MANAGER/PRACTICE_LEAD/EMPLOYEE roles; toCoreRecord normalization; S3-P3-05 additive)."
+    },
+    {
+      "type": "tactical-adrs",
+      "path": "artifacts/06-planning/tactical-adrs.md",
+      "description": "5 tactical ADRs (iteration-3 re-run of the deviation scan): S3-01 functional core reconciled with runMatch/buildMatchDataset wiring; S3-02 MatchResult superset adds optional rank/inRequestedWindow; S3-03 rewrite SKILL-1 MatchResult stub + extend match-staffing prompt; S3-04 canonical CoreProfileRecord + toCoreRecord reconciles the authored profile shape with the dataset output without dropping trustState/seniority/timezone; S3-05 (NEW) MatchResult z.preprocess(coerceModelShape) canonicalizes the model's bare-array / shortlist-keyed / results-keyed output encodings to {results,...} BEFORE the unchanged entry-level object validation, required because callClaude validates raw internally at claude.ts:132 (F-01; BR-09 intact). Non-deviations Zod-before-use row updated. No ADR superseded."
+    }
+  ],
+  "events": [
+    {
+      "event": "implementation_plan_revised",
+      "iteration": 3,
+      "phases_count": 5,
+      "test_scenarios_count": 15,
+      "validation_passed": true,
+      "tactical_adrs_created": true,
+      "tactical_adrs_count": 5,
+      "reviewer_findings_resolved": ["F-01 (iteration 3, CRITICAL)", "F-02 (iteration 3, LOW)"],
+      "prior_iteration_findings_confirmed_resolved": ["F-01", "F-02", "F-03", "F-04", "F-05", "F-06"]
+    }
+  ],
+  "plan_summary": {
+    "files_new": [
+      "lib/match/run-staffing-search.ts",
+      "lib/match/dataset.ts",
+      "lib/match/config.ts",
+      "app/api/match/route.ts",
+      "tests/staffing-matcher.test.ts"
+    ],
+    "files_modified": [
+      "tests/setup/test-helpers.ts",
+      "src/schemas/MatchResult.ts",
+      "src/prompts/match-staffing.ts"
+    ],
+    "files_reused_unchanged": [
+      "lib/ai/claude.ts",
+      "lib/ai/route.ts",
+      "src/prompts/system.ts",
+      "lib/repos/db.ts",
+      "lib/domain/trust-state.ts",
+      "vitest.config.ts"
+    ],
+    "estimated_loc": 392,
+    "loc_budget": 360,
+    "loc_overage_justification": "Reviewer-finding-driven scaffolding/config, not feature creep: iteration-2 test-helper additions (~20), RANKING_RULES_PROMPT constant (~12), toCoreRecord normalizer (~7); iteration-3 coerceModelShape preprocess for F-01 (~7); the match-staffing template shrinks (~30->~18) as ranking rules move out of it. Net ~392 across the same 8 files (single number reconciled in §1, §8, banner, output JSON per F-02). No phase split required.",
+    "acs_covered": ["AC-04", "AC-05", "AC-06", "AC-21", "AC-11"],
+    "acs_out_of_scope": ["AC-24 (stale-session redirect — deferred to SKILL-6 where real auth lands; no real session lifecycle in SKILL-3)"],
+    "business_rules_covered": ["BR-03", "BR-04", "BR-05", "BR-09", "BR-12"],
+    "phase_0_baseline_defined": true
+  },
+  "validation": {
+    "p0_gaps": [],
+    "p1_gaps": [],
+    "p2_gaps": [
+      "Page-02 §2.5 silent on rank/inRequestedWindow that the authored test asserts — resolved as an additive optional schema superset (TACTICAL-ADR-S3-02).",
+      "Page-02 §2.5 silent on the model emitting bare-array / shortlist-keyed output encodings — resolved as additive coercion (z.preprocess) before the unchanged entry-level object validation (TACTICAL-ADR-S3-05, F-01 iteration 3).",
+      "Authored-test profile record shape differs from buildMatchDataset output — resolved via the canonical CoreProfileRecord + toCoreRecord normalizer (TACTICAL-ADR-S3-04, F-02 iteration 2); the production path always carries trustState/seniority/timezone.",
+      "Full session/proxy.ts role enforcement + stale-session redirect (AC-24) is SKILL-6; SKILL-3 scopes the dataset + denies Employee via the SKILL-2 caller-identity seam. AC-24 is explicitly out-of-scope here (F-05), not a gap."
+    ],
+    "p0_resolved": true,
+    "all_acs_have_phases_and_tests": true,
+    "evidence_citations_present": true,
+    "reviewer_findings_iteration_3": {
+      "F-01": "Resolved (CRITICAL) — re-verified claude.ts:132 runs MatchResult.safeParse(raw) INSIDE callClaude, before the core maps results->shortlist; and staffing-matcher.test.ts:66-87/127-136 script a bare array, :152-158 script {shortlist,shortfallNote}, with makeClaudeClientSpy (test-helpers.ts:27-32) JSON.stringifying verbatim. A plain z.object would reject both -> res.ok=false -> AC-04/05/21 unsatisfiable. FIX: MatchResult is now z.preprocess(coerceModelShape, z.object({...})) that wraps a bare array as {results}, renames a top-level shortlist->results (preserving shortfallNote), and passes {results} through, BEFORE the inner object validation (matchPercent 0..100 + required entry fields unchanged; BR-09 intact, real Zod not a bypass). New TACTICAL-ADR-S3-05; updated §2.5, §1, Persona note, Phase 1/S3-P1-01, Phase 3, Wiring Trace, AC Mechanism Map, Risk Mitigation, Validation Findings.",
+      "F-02": "Resolved (LOW) — internal LOC drift (§1 said ~378, §8/output said 385 for the same 8 files) reconciled to a single ~392 (prior 385 + the ~7-LOC coerceModelShape preprocess) propagated to §1, §8 table+note, the iteration banner, and this output JSON."
+    },
+    "reviewer_findings_iteration_2_confirmed_resolved": {
+      "F-01": "tests/setup/test-helpers.ts MODIFY adds loadModule + SYNTHETIC_PROFILES.",
+      "F-02": "Canonical CoreProfileRecord + toCoreRecord normalizer (TACTICAL-ADR-S3-04).",
+      "F-03": "RANKING_RULES_PROMPT + dataset in cacheableContext (claude.ts:118); query in the user turn.",
+      "F-04": "Roles ADMIN|MANAGER|PRACTICE_LEAD|EMPLOYEE (no HR token), per schema.prisma:15.",
+      "F-05": "AC-24 stale-session redirect deferred to SKILL-6 (out-of-scope here).",
+      "F-06": "Phase 0 relabeled; S3-P3-05 flagged additive; test-helpers in checklist + files_modified."
+    }
+  },
+  "deviation_scan": {
+    "target_arch_provided": true,
+    "iteration": 3,
+    "pass_1_standards_scannable": "re-run against the revised plan — local stub architecture-principles (no constraints beyond defaults, Page 05 Council/Deviation Notes); no standards gate violated; no CI/CD gate touched. The F-01 coerceModelShape preprocess preserves Zod-before-use at the boundary (entry-level validation unchanged), so the architecture-patterns alignment is maintained.",
+    "pass_2_judgment_based": "re-run — no architecture-council trigger (no production data platform, multi-tenant, networking, compliance, vendor, cost-impact); 5 contract/identifier/record/output-encoding-level tactical deviations detected (S3-05 is new this iteration for the F-01 output-shape normalization)",
+    "tactical_adrs_created": true,
+    "tactical_adrs_count": 5,
+    "tactical_adr_ids": ["TACTICAL-ADR-S3-01", "TACTICAL-ADR-S3-02", "TACTICAL-ADR-S3-03", "TACTICAL-ADR-S3-04", "TACTICAL-ADR-S3-05"],
+    "superseded_adrs": []
+  },
+  "built_from": {
+    "prd": "v1",
+    "acceptance-criteria": "v1",
+    "target_state_architecture": "v1",
+    "acceptance_tests": "v1",
+    "dependency_report": "2026-06-08"
+  },
+  "next_stage_ready": true,
+  "metadata": {
+    "run_type": "local_only",
+    "initiative": "skillsync-vertex-hackathon",
+    "pipeline_stage": "06-implementation-planning"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "jira_id": "SKILL-3",
+  "iteration": 2,
+  "reviewer": "nulogic-implementation-reviewer",
+  "evidence": [
+    {
+      "finding": "F-01",
+      "type": "SPEC_CONTRACT_MISMATCH + ADR_MISSING",
+      "severity": "critical",
+      "claim": "callClaude validates raw model output with the planned MatchResult schema (z.object({results:[...]})) before the core maps results->shortlist.",
+      "code_evidence": [
+        "lib/ai/claude.ts:132  -> const parsed = schema.safeParse(raw); (validation is INSIDE callClaude)",
+        "lib/ai/claude.ts:126  -> const raw = extractStructuredBlock(response); (raw = JSON.parse of scripted text block)",
+        "implementation-plan.md §2.5/§2.6; Phase 3 line 206 'routes through callClaude (Opus) -> MatchResult ... on Ok map results->shortlist'",
+        "SUB-TASK-1.md step 3 -> MatchResult per §2.5: results[]{...}",
+        "architecture 02-service-design-api-contracts.md:196-207 -> MatchResult { requested?, results:[...], shortfallNote? }"
+      ],
+      "contradicting_evidence": [
+        "authored staffing-matcher.test.ts:66-87  -> makeClaudeClientSpy([{profileId,...},{profileId,...}]) = BARE ARRAY (no `results` key)",
+        "authored staffing-matcher.test.ts:127-136 -> makeClaudeClientSpy([{profileId,...}]) = BARE ARRAY",
+        "authored staffing-matcher.test.ts:152-158 -> makeClaudeClientSpy({ shortlist:[...], shortfallNote }) = object keyed `shortlist`, NOT `results`",
+        "tests assert res.ok===true (95,143,165) and read res.shortlist (97-99,144,166) — impossible if MatchResult.safeParse rejects the scripted shapes",
+        "test-helpers.ts:27-32 -> makeClaudeClientSpy wraps the arg verbatim into content[0].text via JSON.stringify; raw = exactly the scripted shape"
+      ],
+      "impact": "MatchResult.safeParse([...]) and safeParse({shortlist,...}) both fail (not the {results} object) -> callClaude returns Failure -> runStaffingSearch returns {ok:false} -> AC-04/AC-05/AC-21 RED tests cannot turn GREEN. No tactical ADR documents this top-level output-shape divergence (S3-02 only adds optional rank/inRequestedWindow).",
+      "verdict": "FAIL"
+    },
+    {
+      "finding": "F-02",
+      "type": "COUNT_DRIFT",
+      "severity": "low",
+      "claim": "Plan LOC totals are internally consistent.",
+      "code_evidence": [
+        "implementation-plan.md §1 line 44 -> '~378 LOC across 8 files'",
+        "implementation-plan.md §8 line 287 -> Total ~385",
+        "implementation-planner-output.json estimated_loc -> 385",
+        "per-file sum 20+35+18+80+82+20+45+85 = 385"
+      ],
+      "verdict": "FAIL (minor)"
+    }
+  ],
+  "verified_resolved_prior_findings": {
+    "F-01_iter1": "loadModule/SYNTHETIC_PROFILES absent in repo (grep) -> plan MODIFY confirmed correct",
+    "F-02_iter1": "CoreProfileRecord/toCoreRecord (S3-04) closes record-shape seam",
+    "F-03_iter1": "caching wiring matches claude.ts:118 (system=cacheableContext); SYSTEM_PROMPT not auto-passed",
+    "F-04_iter1": "roles match schema.prisma:15 (no HR)",
+    "F-05_iter1": "AC-24 deferred to SKILL-6, no orphan test; only seam getCallerEmployeeId->'p-001'",
+    "F-06_iter1": "additive label + checklist reconciliation + counts 15/8"
+  },
+  "passes": {
+    "ac_coverage": "AC-04/05/06/21 + AC-11/BR-03 mapped; AC-24 legitimately deferred; no scope creep",
+    "reuse_validation": "per-file audit complete; BUILD-NEW analogs (parse-certificate.ts, cert/config.ts, certificate/route.ts) verified real; callClaude/route/renderPrompt IMPORT verified",
+    "phase_ordering": "TDD DAG, no cycles",
+    "rbac_matrix": "MANAGER/ADMIN->org, PRACTICE_LEAD->team, EMPLOYEE->denied (one scenario per cell)",
+    "wiring_trace": "all new identifiers have cited consumers",
+    "structural": "DIP-clean injected claude; dataset sole reader; thin route; single callClaude; read-only",
+    "pipeline_impact": "none"
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "agent_id": "nulogic-implementation-reviewer",
+  "jira_id": "SKILL-3",
+  "status": "approved",
+  "iteration": 3,
+  "total_findings": 0,
+  "new_gaps_found": 0,
+  "gaps_found": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+  "review_results": {
+    "ac_coverage": { "passed": 5, "failed": 0, "total": 5 },
+    "architecture_alignment": { "passed": 7, "failed": 0, "total": 7 },
+    "codebase_patterns": { "passed": 6, "failed": 0, "total": 6 },
+    "structural_quality": { "passed": 8, "failed": 0, "total": 8 },
+    "test_scenarios": { "passed": 15, "failed": 0, "total": 15 },
+    "tactical_adrs": { "passed": 5, "failed": 0, "total": 5 },
+    "diff_budget": { "passed": 1, "failed": 0, "total": 1 },
+    "reuse_validation": { "passed": 12, "failed": 0, "total": 12 },
+    "phase_ordering": { "passed": 5, "failed": 0, "total": 5 },
+    "simplicity": { "passed": 1, "failed": 0, "total": 1 },
+    "cross_artifact_reconciliation": { "passed": 4, "failed": 0, "total": 4 },
+    "file_checklist_delta": { "passed": 2, "failed": 0, "total": 2 },
+    "wiring_traceability": { "passed": 1, "failed": 0, "total": 1 }
+  },
+  "tactical_adrs_approved": true,
+  "human_review_required": false,
+  "next_stage_ready": true,
+  "feedback": [],
+  "artifacts_created": [],
+  "built_from": {
+    "implementation_plan": "artifacts/06-planning/implementation-plan.md (iteration 3)",
+    "tactical_adrs": "artifacts/06-planning/tactical-adrs.md (iteration 3)",
+    "test_scenarios": "artifacts/06-planning/test-scenarios.json (iteration 3)",
+    "planner_output": "outputs/implementation-planner-output.json (iteration 3)",
+    "story": "STORY.md",
+    "sub_tasks": ["SUB-TASK-1.md", "SUB-TASK-2.md", "SUB-TASK-3.md"],
+    "authored_acceptance_test": "artifacts/02-acceptance-tests/e2e-tests/staffing-matcher.test.ts",
+    "previous_findings": "outputs/implementation-reviewer-output.json (iteration 2)",
+    "spec": "ai-nu-skillsync/docs/SPEC.md",
+    "codebase_evidence": [
+      "lib/ai/claude.ts",
+      "lib/ai/route.ts",
+      "src/prompts/system.ts",
+      "src/prompts/match-staffing.ts",
+      "src/schemas/MatchResult.ts",
+      "src/schemas/index.ts",
+      "tests/setup/test-helpers.ts",
+      "tests/cert-parsing.test.ts",
+      "tests/foundation/wrapper-gate.test.ts",
+      "lib/cert/parse-certificate.ts",
+      "app/api/uploads/certificate/route.ts",
+      "lib/domain/trust-state.ts",
+      "prisma/schema.prisma"
+    ],
+    "dependency_report": "artifacts/05-dependencies/dependency-report.md"
+  },
+  "iteration_3_delta": {
+    "prior_findings_resolved": {
+      "F-01_iter2_output_shape_critical": "RESOLVED (re-verified against repo). claude.ts:132 confirmed to run schema.safeParse(raw) INTERNALLY before the core maps results->shortlist; cacheableContext->system at claude.ts:118; renderPrompt->messages at claude.ts:117. The authored test (staffing-matcher.test.ts) confirmed to script makeClaudeClientSpy with a BARE ARRAY for AC-04 (:66-87) and AC-05 (:127-136) and a SHORTLIST-KEYED object for AC-21 (:152-158); test-helpers.ts:28-29 JSON.stringifies verbatim. The fix — MatchResult = z.preprocess(coerceModelShape, z.object({...})) canonicalizing array | {shortlist} | {results} -> {results} before the unchanged inner object validation — is correct, necessary, and matches the established SKILL-2 CertParseResult z.preprocess precedent. Entry-level validation (matchPercent 0..100, required fields) verified unchanged (S3-P1-01 asserts out-of-range matchPercent + legacy {matches} still REJECT). BR-09 intact (real Zod, encoding-only tolerance, no bypass). AC-06 reject paths intact (garbled -> extract gate; throw -> sdk; malformed object -> inner z.object fails). New TACTICAL-ADR-S3-05 documents the deviation with genuine trigger, alternatives, and trade-offs.",
+      "F-02_iter2_loc_count_drift_low": "RESOLVED. LOC reconciled to a single ~392 across plan §1, §8 table (sums 20+42+18+80+82+20+45+85=392 exactly), iteration banner, and planner-output.json estimated_loc. No residual 378/385 drift."
+    },
+    "note": "Clean-slate full review (iteration 3). Both iteration-2 findings (1 CRITICAL output-shape mismatch, 1 LOW LOC drift) verified RESOLVED against the actual repo and the authored acceptance test. No new gaps surfaced. Re-verified depth on the load-bearing seam, entry-level validation, BR-09, the AC-06 failure path, CoreProfileRecord reconciliation, harness imports, caching field placement, role tokens, the identifier delta sweep (including wrapper-gate.test.ts which is unaffected), all 5 tactical ADRs, and full cross-artifact reconciliation. total_findings=0 at all severities -> next_stage_ready=true."
+  },
+  "verification_notes": {
+    "load_bearing_seam": "VERIFIED CORRECT. The z.preprocess(coerceModelShape) fix genuinely lets the authored test's three scripted Claude shapes (bare array AC-04/05, shortlist-keyed object AC-21, canonical {results}) pass MatchResult.safeParse(raw) as called inside callClaude (claude.ts:132). SKILL-2 CertParseResult is the precedent for this exact z.preprocess pattern.",
+    "entry_level_validation": "NOT weakened — inner z.object (matchPercent 0..100 + required entry fields) runs after coercion; S3-P1-01 asserts invalid/legacy shapes still fail.",
+    "BR09": "intact — single callClaude boundary + Zod gate; no keyword/regex/in-code date arithmetic anywhere.",
+    "AC06_failure_rejects": "intact — garbled JSON fails at the extract gate before preprocess; throw -> sdk; malformed-parseable object -> inner z.object parse failure. All yield {ok:false} + MATCH_UNAVAILABLE_MESSAGE, zero exposed results (S3-P3-04 + additive S3-P3-05).",
+    "harness_imports": "resolve — loadModule + SYNTHETIC_PROFILES confirmed absent from the repo; the EXTEND of tests/setup/test-helpers.ts is required and correctly planned.",
+    "CoreProfileRecord": "production path keeps trustState/seniority/timezone (schema.prisma + trust-state.ts confirm); test path nulls them by design; toCoreRecord drops neither producer's fields.",
+    "caching": "cacheableContext->system (claude.ts:118), query in messages user turn (claude.ts:117). Real cache_control:ephemeral markers are deferred with the live SDK client (TODO, cert precedent); the plan's testable assertions are scoped to field placement, which the boundary supports. Non-blocking observation only.",
+    "role_tokens": "match the enum ADMIN|MANAGER|PRACTICE_LEAD|EMPLOYEE (schema.prisma:15); no HR token anywhere.",
+    "delta_sweep": "MatchResult consumers limited to the barrel + registry (no shape dep); wrapper-gate.test.ts references match-staffing only in a describe string and uses route() only -> rewrite safe. dependency-report score note correctly superseded by matchPercent (SPEC line 65).",
+    "reconciliation": "files=8 (5 new + 3 modified), phases=5, scenarios=15, tactical_adrs=5, LOC=~392 all agree across all four artifacts.",
+    "scope": "AC-04/05/06/21 + AC-11/BR-03 fully mapped (phase + test + file). AC-24 correctly deferred to SKILL-6 (not a gap). RBAC matrix complete. No scope creep, no over-engineering, no speculative design."
+  },
+  "metadata": {
+    "run_type": "local_only",
+    "initiative": "skillsync-vertex-hackathon",
+    "pipeline_stage": "06-implementation-planning",
+    "reviewer_persona": "adversarial",
+    "reviewed_at": "2026-06-08",
+    "iteration_note": "Iteration 3 — full clean-slate review; both iteration-2 findings confirmed resolved; 0 new findings; APPROVED."
+  }
+}

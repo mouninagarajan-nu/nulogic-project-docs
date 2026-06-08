@@ -17,7 +17,8 @@
 | **Gaps Closed** | TD-MATCH-01, TD-DATA-04 (matcher reads seniority/timezone) |
 | **Owner** | mouni.nagarajan@nulogic.io |
 | **Started At** | 2026-06-08T00:00:00Z |
-| **Status** | Ready |
+| **Status** | In Progress |
+| **Pipeline Stage** | 06-implementation-planning |
 
 ## User Story
 
@@ -144,3 +145,6 @@ Status: Awaiting UX designs (final screens in SKILL-6). Required states: a plain
 |---|---|---|
 | 2026-06-05T00:00:00Z | nulogic-jira-creator | Story created from PRD + target-state architecture (Phase 3). Local-only run. |
 | 2026-06-08T00:00:00Z | nulogic-dependency-checker | Dependencies cleared. SKILL-1 Done/merged. All foundation building blocks present on branch. No merge conflict risk. Status → Ready. |
+| 2026-06-08T00:00:00Z | 06-implementation-planning | implementation-planner | Plan created. 5 phases, 14 test scenarios. 3 tactical ADRs (reconcile authored test vs Page-02 contract; MatchResult superset; rewrite SKILL-1 stub schema/prompt). ~358 LOC across 7 files (5 new, 2 modified). No P0 gaps. |
+| 2026-06-08T00:00:00Z | 06-implementation-planning | implementation-planner | Plan revised (iteration 2) — resolved 6 reviewer findings, each re-verified against the repo: F-01 test-helpers MODIFY (loadModule + SYNTHETIC_PROFILES); F-02 canonical CoreProfileRecord (new ADR-S3-04); F-03 ranking rules + dataset in cacheableContext; F-04 roles ADMIN/MANAGER/PRACTICE_LEAD/EMPLOYEE (no HR); F-05 AC-24 out-of-scope (SKILL-6); F-06 additive scenario relabel + count fix. Now 5 phases, 15 scenarios, 4 tactical ADRs, ~385 LOC across 8 files (5 new, 3 modified). No P0 gaps. |
+| 2026-06-08T00:00:00Z | 06-implementation-planning | implementation-planner | Plan revised (iteration 3, final) — clean-slate reviewer confirmed all 6 prior findings RESOLVED; resolved 2 new: F-01 (CRITICAL) MatchResult is now z.preprocess(coerceModelShape, z.object({...})) coercing the model's bare-array (AC-04/05) and shortlist-keyed (AC-21) output encodings to {results,...} before the unchanged entry-level validation — required because callClaude runs schema.safeParse(raw) internally at claude.ts:132; new TACTICAL-ADR-S3-05; BR-09 intact. F-02 (LOW) LOC reconciled to a single ~392 throughout. Now 5 phases, 15 scenarios, 5 tactical ADRs, ~392 LOC across 8 files (5 new, 3 modified). No P0 gaps. next_stage_ready=true. |
