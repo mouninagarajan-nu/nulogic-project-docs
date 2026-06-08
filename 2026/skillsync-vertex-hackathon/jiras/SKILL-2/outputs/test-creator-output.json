@@ -1,0 +1,106 @@
+{
+  "jira_id": "SKILL-2",
+  "workflow_stage": "test-creation",
+  "iteration": 3,
+  "status": "success",
+  "generated_by": "nulogic-test-creator",
+  "generated_at": "2026-06-08",
+  "built_from": {
+    "prd": "v1",
+    "implementation_plan": "v1",
+    "test_scenarios": "iteration-2",
+    "tactical_adrs": "iteration-3"
+  },
+  "summary": "Iteration-3 revision: resolved all 7 reviewer findings (2 high, 3 medium, 2 low). G2-01: added S2-P3-01..S2-P3-05 to excluded_scenarios[] in test-manifest.json with per-scenario consolidation justification (which Phase-1/2 test covers each). G2-02: added TADR-S2-03 to tactical-adrs.md documenting integration-only normalizer branch coverage decision; manifest normalizer_coverage_decision now references TADR-S2-03. G2-03: AC-22 describe block changed from beforeAll to beforeEach; each test resets EmployeeSkill to SELF_REPORTED baseline so S2-P2-04 SELF_REPORTED→VERIFIED transition is genuinely exercised in isolation. G2-04: S2-P1-02 multi-skill DB assertion changed from toBeGreaterThanOrEqual(2) to toBe(2) (exact count). G2-05: clearReconcilePending() helper exported from lib/repos/skill.ts and called in TS-002 beforeEach; module-level Set can no longer be vacuously populated from a prior test. G2-06: Gherkin body headings S2-P1-01b→S2-P2-01 and S2-P1-02b→S2-P2-02 (coverage table was already correct). G2-07: Gherkin overview header updated from 15 to 16 tests. Confirmed-kept: F-01 TS-002 real injection, F-02 cross-profile rejection, F-04 BR-02 both-no-write, F-06 non-tautological, F-07 AC-23 beforeEach, F-08 SDK relabel, TADR-S2-01 v2 binding payloads. Total tests: 16 (unchanged). All 16 fail RED for the right reason.",
+  "artifacts_created": [
+    {
+      "type": "executable_test_file",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/cert-parsing.test.ts",
+      "repo": "ai-nu-skillsync",
+      "test_count": 16,
+      "status": "FAILING (RED)"
+    },
+    {
+      "type": "foundation_code_seam",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/lib/repos/skill.ts",
+      "change": "Added clearReconcilePending() test-seam export (G2-05)"
+    },
+    {
+      "type": "test_manifest",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/jiras/SKILL-2/artifacts/07-tests/test-manifest.json"
+    },
+    {
+      "type": "gherkin_scenarios_doc",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/jiras/SKILL-2/artifacts/07-tests/test-scenarios-gherkin.md"
+    },
+    {
+      "type": "tactical_adr",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/jiras/SKILL-2/artifacts/06-planning/tactical-adrs.md",
+      "change": "Added TADR-S2-03 — integration-only normalizer branch coverage decision (G2-02)"
+    }
+  ],
+  "test_statistics": {
+    "total_tests": 16,
+    "criteria_covered": ["AC-01", "AC-02", "AC-03", "AC-22", "AC-23"],
+    "business_rules_covered": ["BR-01", "BR-02", "BR-09", "BR-18", "BR-19"],
+    "all_criteria_covered": true,
+    "test_breakdown": {
+      "unit": 0,
+      "integration": 16,
+      "e2e": 0,
+      "performance": 0,
+      "performance_required": false
+    },
+    "coverage_targets": {
+      "overall": 40,
+      "new_code": 45,
+      "branch": 40,
+      "critical_paths": 75
+    },
+    "predicted_coverage": {
+      "overall": 54,
+      "new_code": 62,
+      "branch": 50,
+      "critical_paths": 82
+    },
+    "meets_target": true
+  },
+  "red_run_evidence": {
+    "command": "pnpm test tests/cert-parsing.test.ts",
+    "total_tests": 16,
+    "passed": 0,
+    "failed": 16,
+    "failure_reason": "Cannot find package '@/lib/cert/parse-certificate' — missing implementation (not a syntax or harness error)",
+    "meaningful_red": true,
+    "vitest_version": "4.1.8",
+    "run_duration_ms": 2572,
+    "run_at": "2026-06-08T11:15:31Z"
+  },
+  "typecheck_evidence": {
+    "command": "pnpm typecheck",
+    "result": "PASS (tsc --noEmit, 0 errors)",
+    "run_at": "2026-06-08T11:15:00Z"
+  },
+  "findings_resolved": {
+    "G2-01": "HIGH — RESOLVED. S2-P3-01..S2-P3-05 added to excluded_scenarios[] in test-manifest.json with per-scenario justification: S2-P3-01→S2-P1-01+S2-P2-01; S2-P3-02→S2-P1-02+S2-P2-02; S2-P3-03→S2-P1-03+S2-P1-03-enrollment; S2-P3-04→S2-P2-03+S2-P2-04; S2-P3-05→S2-P1-05+S2-P2-06.",
+    "G2-02": "HIGH — RESOLVED. TADR-S2-03 added to tactical-adrs.md documenting the integration-only normalizer coverage decision with branch table, rationale, and alternatives. manifest normalizer_coverage_decision.tadr_ref set to 'TADR-S2-03'.",
+    "G2-03": "MEDIUM — RESOLVED. AC-22 describe block changed from beforeAll to beforeEach; now also resets EmployeeSkill to SELF_REPORTED baseline before each test so S2-P2-04 starts from a fresh known state and the SELF_REPORTED→VERIFIED transition is genuinely exercised.",
+    "G2-04": "MEDIUM — RESOLVED. S2-P1-02 multi-skill DB count changed from toBeGreaterThanOrEqual(2) to toBe(2).",
+    "G2-05": "MEDIUM — RESOLVED. clearReconcilePending() exported from lib/repos/skill.ts (minimal, documented). Called in TS-002 beforeEach alongside seedCertTestProfile; module-level reconcilePending Set cannot be vacuously populated from a prior test.",
+    "G2-06": "LOW — RESOLVED. Gherkin body headings renamed: S2-P1-01b→S2-P2-01, S2-P1-02b→S2-P2-02.",
+    "G2-07": "LOW — RESOLVED. Gherkin overview header updated from '15 executable Vitest tests' to '16 executable Vitest tests'."
+  },
+  "confirmed_kept": {
+    "F-01": "TS-002 layer2Client injected via confirmAndWriteSkill top-level option — not regressed.",
+    "F-02": "S2-AUTH-01 cross-profile rejection test present and unchanged.",
+    "F-04": "S2-P1-03 asserts both no Certificate AND no EmployeeSkill rows — not regressed.",
+    "F-06": "S2-P1-02 write-loop assertion checks DB rows (non-tautological) — not regressed.",
+    "F-07": "AC-23 describe block uses beforeEach — not regressed.",
+    "F-08": "SDK-throw scenario labeled S2-P1-03-sdk in manifest and gherkin — not regressed.",
+    "TADR-S2-01-v2": "Binding payloads (flat object AC-01, top-level array AC-02) correct and unchanged."
+  },
+  "git_branch_created": false,
+  "git_branch_used": "feature/SKILL-2-cert-parsing",
+  "tests_staged_not_committed": true,
+  "next_stage_ready": true
+}

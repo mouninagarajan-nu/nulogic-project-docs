@@ -1,0 +1,25 @@
+{
+  "jira_id": "SKILL-2",
+  "workflow_stage": "implementation-planning",
+  "context": {
+    "initiative_name": "skillsync-vertex-hackathon",
+    "local_only": true,
+    "code_repo_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+    "code_branch": "feature/SKILL-2-cert-parsing",
+    "initiative_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/03-architecture/target-state/",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/02-acceptance-tests/"
+    ],
+    "story_artifacts": [
+      "STORY.md",
+      "SUB-TASK-1.md",
+      "SUB-TASK-2.md",
+      "SUB-TASK-3.md"
+    ],
+    "previous_artifacts": [
+      "artifacts/05-dependencies/dependency-report.md",
+      "outputs/dependency-checker-output.json"
+    ],
+    "acceptance_test_focus": "cert-parsing.test.ts (Scenarios A-E: AC-01/02/03/22/23)"
+  }
+}

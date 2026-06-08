@@ -6,19 +6,41 @@
   "story_points": 5,
   "t_shirt": "L",
   "priority": "Highest",
-  "status": "Backlog",
+  "status": "In Progress",
+  "lifecycle_status": "In Progress",
+  "owner": "mouninagarajan-nu",
   "blocks": ["SKILL-4"],
   "blocked_by": [],
   "blocked_by_resolved": ["SKILL-1"],
   "acs": ["AC-01", "AC-02", "AC-03", "AC-22", "AC-23"],
   "business_rules": ["BR-01", "BR-02", "BR-09", "BR-18", "BR-19"],
+  "current_stage": 8,
+  "pipeline_stage": "08-implementation",
+  "docs_branch": "feature/SKILL-2-cert-parsing",
   "target_repositories": [
     {
       "name": "ai-nu-skillsync",
+      "organization": "NUTechnolgyInc",
+      "url": "git@github.com:NUTechnolgyInc/ai-nu-skillsync.git",
       "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
-      "branch": null,
-      "url": "LOCAL-ONLY"
+      "branch": "feature/SKILL-2-cert-parsing"
     }
   ],
-  "created_at": "2026-06-05T00:00:00Z"
+  "stages": {
+    "5": {"status": "complete", "agent": "nulogic-dependency-checker", "completed_at": "2026-06-07T00:00:00Z"},
+    "6a": {"status": "complete", "agent": "nulogic-implementation-planner", "completed_at": "2026-06-07T00:00:00Z"},
+    "6b": {"status": "complete", "agent": "nulogic-implementation-reviewer", "completed_at": "2026-06-08T00:00:00Z", "convergence_loop": {"max_iterations": 3, "min_iterations": 1, "iterations_run": 3, "loop_status": "max_iterations_reached", "final_total_findings": 1, "final_finding": "F-09 (medium) — stale tactical-adrs description string in planner output JSON; fixed by orchestrator", "tactical_adrs_approved": true}, "convergence_override": "user_accepted", "override_note": "All substantive findings (F-01..F-07) resolved and verified; trailing findings F-08 (count drift) and F-09 (stale description) were bookkeeping-only and fixed by the orchestrator. User accepted convergence."},
+    "7a": {"status": "complete", "agent": "nulogic-test-creator", "completed_at": "2026-06-08T00:00:00Z", "iteration": 3, "tests": 16, "red_run": "16/16 failed — Cannot find package '@/lib/cert/parse-certificate'", "findings_resolved": ["F-01","F-02","F-03","F-04","F-05","F-06","F-07","F-08","F-09","G2-01","G2-02","G2-03","G2-04","G2-05","G2-06","G2-07"]},
+    "7b": {"status": "complete", "agent": "nulogic-test-reviewer", "completed_at": "2026-06-08T00:00:00Z", "convergence_loop": {"max_iterations": 3, "min_iterations": 1, "iterations_run": 3, "loop_status": "converged", "final_total_findings": 0, "next_stage_ready": true}, "note": "Approved at iteration 3; 16 RED tests, all failing for the right reason (missing @/lib/cert/parse-certificate)."},
+    "8a": {"status": "pending", "agent": "nulogic-code-writer"},
+    "8b": {"status": "pending", "agent": "nulogic-code-reviewer"},
+    "9": {"status": "pending", "agent": "nulogic-quality-gate-validator"},
+    "10": {"status": "pending", "agent": "(built-in)"},
+    "11": {"status": "pending", "agent": "nulogic-pr-assembler"},
+    "12": {"status": "pending", "agent": "nulogic-deployment-agent"}
+  },
+  "review_overrides": {},
+  "blocking_conditions": [],
+  "created_at": "2026-06-05T00:00:00Z",
+  "activated_at": "2026-06-07T17:05:00Z"
 }

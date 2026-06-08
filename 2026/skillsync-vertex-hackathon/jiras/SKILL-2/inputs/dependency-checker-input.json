@@ -1,0 +1,17 @@
+{
+  "jira_id": "SKILL-2",
+  "workflow_stage": "dependency-check",
+  "context": {
+    "initiative_name": "skillsync-vertex-hackathon",
+    "local_only": true,
+    "initiative_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/03-architecture/target-state/"
+    ],
+    "dependency_graph": {
+      "blocks": ["SKILL-4"],
+      "blocked_by": [],
+      "blocked_by_resolved": ["SKILL-1"]
+    },
+    "notes": "SKILL-1 (foundation) is Done and merged into remote main via PR #1. SKILL-2 branches off main with the full foundation (Claude wrapper, CertParseResult schema, Certificate.contentHash + @@unique, upsertAndPromoteSkill, fixtures/certs)."
+  }
+}
