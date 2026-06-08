@@ -1,0 +1,23 @@
+{
+  "jira_id": "SKILL-3",
+  "workflow_stage": "dependency-check",
+  "local_only": true,
+  "context": {
+    "initiative_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/03-architecture/target-state/"
+    ],
+    "story_metadata": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/jiras/SKILL-3/metadata.json",
+    "code_repository": {
+      "name": "ai-nu-skillsync",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+      "branch": "feature/SKILL-3-staffing-matcher",
+      "base": "main"
+    },
+    "dependency_graph": {
+      "blocks": ["SKILL-4"],
+      "blocked_by": [],
+      "blocked_by_resolved": ["SKILL-1"]
+    },
+    "notes": "SKILL-1 (foundation: Claude wrapper + Opus routing + prompt caching, MatchResult schema, seeded profiles with allocation/freeFrom/seniority/timezone, trustState) merged to main via PR #1. SKILL-2 also merged to main (PR #2) but is NOT a dependency of SKILL-3. SKILL-3 builds the role-scoped dataset builder + match-staffing prompt + /api/match handler on top of the SKILL-1 foundation."
+  }
+}

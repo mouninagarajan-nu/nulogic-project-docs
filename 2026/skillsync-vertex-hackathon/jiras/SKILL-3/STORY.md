@@ -17,7 +17,7 @@
 | **Gaps Closed** | TD-MATCH-01, TD-DATA-04 (matcher reads seniority/timezone) |
 | **Owner** | mouni.nagarajan@nulogic.io |
 | **Started At** | 2026-06-08T00:00:00Z |
-| **Status** | In Progress |
+| **Status** | Ready |
 
 ## User Story
 
@@ -143,3 +143,4 @@ Status: Awaiting UX designs (final screens in SKILL-6). Required states: a plain
 | Timestamp | Actor | Note |
 |---|---|---|
 | 2026-06-05T00:00:00Z | nulogic-jira-creator | Story created from PRD + target-state architecture (Phase 3). Local-only run. |
+| 2026-06-08T00:00:00Z | nulogic-dependency-checker | Dependencies cleared. SKILL-1 Done/merged. All foundation building blocks present on branch. No merge conflict risk. Status → Ready. |
