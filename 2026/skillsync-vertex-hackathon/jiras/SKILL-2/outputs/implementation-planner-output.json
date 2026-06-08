@@ -1,0 +1,81 @@
+{
+  "jira_id": "SKILL-2",
+  "workflow_stage": "implementation-planning",
+  "agent": "nulogic-implementation-planner",
+  "status": "success",
+  "iteration": 3,
+  "generated_at": "2026-06-07T23:06:00Z",
+  "iteration_2_revision_note": "Revised in place to resolve all 7 implementation-reviewer findings (F-01..F-07): TADR-S2-01 re-derived CertParseResult as a z.preprocess normalizer accepting flat-object/array/envelope and always emitting top-level confidence (F-01/F-02); test-scenarios mirror the authored binding payloads exactly (F-03); test setup creates p-001/cat-* + in-progress Enrollment, promotion uses seeded synthetic-handle-001 (F-04); §2.5 divergence documented (F-05); auth (cookies/session/proxy.ts/AC-24) deferred to auth story via getCallerEmployeeId() seam, out of SKILL-2 scope (F-06); parseCertificate file→prompt plumbing specified, no fabricated cert text per BR-09 (F-07). Output-JSON bookkeeping was reconstructed by the orchestrator after the planner's iteration-2 run was interrupted by a session limit post-artifact-write.",
+  "iteration_3_revision_note": "Bookkeeping-only fix (F-08 COUNT_DRIFT): reconciled test-scenario count to 20 (P0:2, P1:6, P2:6, P3:6) across all artifacts. S2-P1-06 (multi-skill sub-threshold confidence gate, BR-02/F-02) was already present in test-scenarios.json but omitted from counts and plan §8 Phase 1 narrative. No design, schema, scenario content, or ADR changes.",
+  "built_from": {
+    "prd": "v1",
+    "target_state_architecture": "v1",
+    "acceptance_tests": "v1",
+    "story": "SKILL-2 STORY.md + SUB-TASK-1/2/3"
+  },
+  "artifacts": [
+    {
+      "type": "implementation-plan",
+      "path": "artifacts/06-planning/implementation-plan.md",
+      "description": "Phase breakdown (Phase 0 baseline + 3 build phases), reuse strategy, spec contracts inventory, wiring trace, AC mechanism map, BR cross-reference, LOC envelope (~378/380), release strategy, pipeline impact, delta sweep, testing strategy, file checklist, risk mitigation, standards compliance."
+    },
+    {
+      "type": "test-scenarios",
+      "path": "artifacts/06-planning/test-scenarios.json",
+      "description": "20 machine-readable scenarios across 4 phases (P0:2 baseline, P1:6 parse/idempotency/multi-skill-confidence-gate, P2:6 confirm/promote/de-dupe, P3:6 fixture e2e + section-8 metric) with GIVEN-WHEN-THEN, scenario_id, test_type, priority, ac, br, test_file, test_function."
+    },
+    {
+      "type": "tactical-adrs",
+      "path": "artifacts/06-planning/tactical-adrs.md",
+      "description": "2 tactical ADRs: TADR-S2-01 v2 (CertParseResult reworked to a z.preprocess normalizer over flat-object | top-level-array | canonical envelope, always emitting a derived top-level confidence for the BR-02 gate — supersedes the iteration-1 object-skills shape), TADR-S2-02 (cert-flow functional core that both the authored AC test and the ADR-004 transport call into). Both LOW impact, non-blocking."
+    }
+  ],
+  "events": [
+    {
+      "event": "discovery_complete",
+      "components_reused": 13,
+      "new_files": 6,
+      "modified_files": 3,
+      "analog_scan_done": true,
+      "interfaces_read": ["callClaude", "resolveCanonicalSkill", "upsertAndPromoteSkill", "markReconcilePending", "trust-state domain map", "injected ClaudeClient double", "Prisma Certificate/Enrollment/EmployeeSkill"]
+    },
+    {
+      "event": "plan_complete",
+      "phases_count": 4,
+      "test_scenarios_count": 20,
+      "loc_estimate": 378,
+      "loc_budget": 380,
+      "loc_within_budget": true
+    },
+    {
+      "event": "deviation_scan_complete",
+      "tactical_adrs_created": true,
+      "tactical_adrs_count": 2,
+      "council_triggers": "none (MVP scope; local stub architecture-principles)",
+      "p0_gaps": 0,
+      "p1_gaps": 2,
+      "p1_gaps_detail": ["live SDK client intentionally stubbed (BR-09 guardrail)", "Route Handler HTTP-edge partially covered (demo scope)"],
+      "p2_p3_gaps_documented": ["reconcilePending is in-memory in SKILL-1; persisted reconcile pass deferred (Page 03 §3.4 OPEN-ITEM, out of SKILL-2 scope)"]
+    },
+    {
+      "event": "validation_complete",
+      "all_acs_covered": true,
+      "acs": ["AC-01", "AC-02", "AC-03", "AC-22", "AC-23"],
+      "all_brs_mapped": true,
+      "brs": ["BR-01", "BR-02", "BR-09", "BR-18", "BR-19"],
+      "phase_0_baseline_defined": true,
+      "coverage_target_met": true,
+      "validation_passed": true
+    }
+  ],
+  "counts": {
+    "phases": 4,
+    "test_scenarios": 20,
+    "new_files": 6,
+    "modified_files": 3,
+    "tactical_adrs": 2
+  },
+  "tactical_adrs_created": true,
+  "next_stage": "07-tests (nulogic-test-creator)",
+  "next_stage_ready": true
+}

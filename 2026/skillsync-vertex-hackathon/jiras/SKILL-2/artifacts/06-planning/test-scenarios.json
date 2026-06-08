@@ -1,0 +1,304 @@
+{
+  "jira_id": "SKILL-2",
+  "iteration": 2,
+  "generated_by": "nulogic-implementation-planner",
+  "built_from": { "prd": "v1", "target_state_architecture": "v1", "acceptance_tests": "v1" },
+  "harness": {
+    "framework": "vitest",
+    "environment": "node",
+    "single_file_command": "pnpm test tests/cert-parsing.test.ts",
+    "db": "per-run disposable seeded SQLite (tests/setup/global-db.ts + tests/setup/db.ts); never dev.db",
+    "alias": "@/* -> repo root",
+    "claude_doubles": "tests/setup/test-helpers.ts (makeClaudeClientSpy | makeClaudeClientGarbled | makeClaudeClientThatThrows)",
+    "fixtures": ["fixtures/certs/aws-saa-valid.pdf", "fixtures/certs/multi-skill-bootcamp.pdf", "fixtures/certs/not-a-cert.png"],
+    "notes": "Seed has NO Enrollment rows and NO 'p-001'/'cat-*' ids (employees+catalog items use cuid). The authored cert-parsing.test.ts hard-codes profileId='p-001' and catalogItemId='cat-aws-saa'|'cat-kubernetes'|'cat-docker' — the cert-parsing test setup MUST create those exact ids (employee.create({id:'p-001'}), catalogItem.create({id:'cat-aws-saa'|...}) and an in-progress Enrollment for each) so confirmAndWriteSkill's FK lookups succeed and AC-03 'stays in-progress' is observable (plan §2.4 / F-04). The promotion scenario (S2-P3-04) instead targets the SEEDED 'synthetic-handle-001' cuid (the only deterministic TypeScript baseline) — documented divergence.",
+    "spy_serialization": "makeClaudeClientSpy(scriptedResponse) -> {content:[{type:'text', text: JSON.stringify(scriptedResponse)}]}; callClaude JSON.parses then schema.safeParse(raw) DIRECTLY (no normalization). So GIVEN payloads below are the EXACT shapes safeParse receives — AC-01 a FLAT single-skill object (top-level confidence), AC-02 a TOP-LEVEL ARRAY (per-skill confidence). CertParseResult is a z.preprocess normalizer that accepts both + an envelope (TADR-S2-01 v2)."
+  },
+  "counts": { "phases": 4, "test_scenarios": 20, "new_files": 6, "modified_files": 3, "tactical_adrs": 2 },
+  "phases": [
+    {
+      "phase": 0,
+      "name": "Baseline (RED) / foundation green",
+      "scenarios": [
+        {
+          "scenario_id": "S2-P0-01",
+          "title": "Foundation suites stay green on the SKILL-2 branch",
+          "test_type": "integration",
+          "priority": "P1",
+          "ac": [],
+          "br": [],
+          "given": "the SKILL-1 foundation is present on feature/SKILL-2-cert-parsing",
+          "when": "the full vitest suite runs",
+          "then": "tests/foundation/* pass and the disposable-DB guard (DATABASE_URL != dev.db) holds",
+          "test_file": "tests/foundation/*.test.ts",
+          "test_function": "(existing foundation suites — no new code)"
+        },
+        {
+          "scenario_id": "S2-P0-02",
+          "title": "Cert-parsing suite is RED for the right reason before implementation",
+          "test_type": "integration",
+          "priority": "P1",
+          "ac": [],
+          "br": [],
+          "given": "lib/cert/parse-certificate does not exist yet",
+          "when": "tests/cert-parsing.test.ts loads the module",
+          "then": "the suite fails on the missing import (not a misleading assertion)",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "describe bootstrap (import guard)"
+        }
+      ]
+    },
+    {
+      "phase": 1,
+      "name": "SUB-TASK-1 — parse core + prompt + schema + confidence gate + content-hash idempotency",
+      "scenarios": [
+        {
+          "scenario_id": "S2-P1-01",
+          "title": "Cert parse happy path routes through Claude exactly once and Zod-validates",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-01"],
+          "br": ["BR-09"],
+          "given": "an injected Claude client scripted (makeClaudeClientSpy) to return the FLAT single-skill object the authored AC-01 test uses verbatim — { skill:'AWS Certified Solutions Architect', issuer:'Amazon Web Services', date:'2026-05-01', level:'associate', confidence:0.96 } (cert-parsing.test.ts:30-36; top-level confidence; NO skills array) — and fixtures/certs/aws-saa-valid.pdf",
+          "when": "parseCertificate({ file: CERT_FIXTURES.validAwsSaa, claude }) is called",
+          "then": "claude.createMessage is called exactly once (BR-09 boundary); the CertParseResult z.preprocess normalizer wraps the flat object into skills[]; parsed.ok === true; parsed.skills[0].skill === 'AWS Certified Solutions Architect' (matches the authored assertion parsed.skills[0])",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-01 parseCertificate routes through Claude, Zod-validates"
+        },
+        {
+          "scenario_id": "S2-P1-02",
+          "title": "Multi-skill cert returns ALL skills; null/missing optional date+level tolerated",
+          "test_type": "integration",
+          "priority": "P1",
+          "ac": ["AC-02"],
+          "br": ["BR-09"],
+          "given": "an injected client scripted (makeClaudeClientSpy) to return the TOP-LEVEL ARRAY the authored AC-02 test uses verbatim — [ {skill:'Kubernetes', issuer:'CNCF', date:'2026-04-10', level:'intermediate', confidence:0.9}, {skill:'Docker', issuer:'CNCF', date:null, level:null, confidence:0.88} ] (cert-parsing.test.ts:57-60; a bare array, NO top-level confidence; second entry date:null+level:null) — and fixtures/certs/multi-skill-bootcamp.pdf",
+          "when": "parseCertificate({ file: CERT_FIXTURES.multiSkill, claude }) is called",
+          "then": "claude.createMessage called once; the CertParseResult z.preprocess normalizer turns the top-level array into {skills:[...], confidence:min(0.9,0.88)=0.88}; parsed.ok === true; skills.length >= 2; the null-date/null-level entry validates (.nullish() level/date) — proving ambiguous optional fields do not break the parse",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-02 multi-skill parse returns all skills, optional fields tolerated"
+        },
+        {
+          "scenario_id": "S2-P1-03",
+          "title": "Garbled JSON / invalid parse -> failure with exact message, no write",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-03"],
+          "br": ["BR-02", "BR-09"],
+          "given": "makeClaudeClientGarbled() (invalid JSON) and fixtures/certs/not-a-cert.png",
+          "when": "parseCertificate({ file: CERT_FIXTURES.unreadable, claude }) is called",
+          "then": "parsed.ok === false, parsed.userMessage contains \"We couldn't reliably read this certificate\", and NO Certificate row and NO EmployeeSkill row are created",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-03 garbled parse -> failure message, nothing written"
+        },
+        {
+          "scenario_id": "S2-P1-04",
+          "title": "Sub-threshold confidence is treated as failure (write nothing)",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-03"],
+          "br": ["BR-02", "BR-09"],
+          "given": "an injected client returning schema-valid JSON with confidence below CONFIDENCE_THRESHOLD",
+          "when": "parseCertificate is called",
+          "then": "parsed.ok === false with the spec'd userMessage, and nothing is persisted (the confidence gate fires even though JSON validated)",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-03 low-confidence -> failure, nothing written"
+        },
+        {
+          "scenario_id": "S2-P1-05",
+          "title": "Idempotent double-submit: one Certificate, prior uploadId, no re-parse",
+          "test_type": "integration",
+          "priority": "P1",
+          "ac": ["AC-23"],
+          "br": ["BR-19"],
+          "given": "the same certificate bytes (same contentHash) submitted twice for the same employee",
+          "when": "the upload path processes the redundant submission",
+          "then": "exactly one Certificate row exists for (employeeId, contentHash), the second call returns the prior uploadId (deduped), and the Claude boundary is NOT invoked a second time",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-23 idempotent double-submit (cert side)"
+        },
+        {
+          "scenario_id": "S2-P1-06",
+          "title": "Multi-skill cert with a sub-threshold per-skill confidence is treated as failure (BR-02, multi-skill gate)",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-03"],
+          "br": ["BR-02", "BR-09"],
+          "given": "an injected client scripted to return a TOP-LEVEL ARRAY of two skills where one carries a confidence below CONFIDENCE_THRESHOLD (e.g. [{skill:'Kubernetes', confidence:0.9}, {skill:'Docker', confidence:0.2}])",
+          "when": "parseCertificate is called (confidenceThreshold=CONFIDENCE_THRESHOLD)",
+          "then": "the normalizer derives top-level confidence=min(0.9,0.2)=0.2, the callClaude confidence gate fires, parsed.ok === false with the spec'd userMessage, and NOTHING is persisted — proving BR-02 low-confidence semantics are defined for the multi-skill array case (F-02)",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-03 multi-skill sub-threshold confidence -> failure, nothing written"
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "SUB-TASK-2 — confirmCertExtraction: upsert+promote to verified, de-dupe fallback, item -> done",
+      "scenarios": [
+        {
+          "scenario_id": "S2-P2-01",
+          "title": "Confirm writes one VERIFIED skill (source=CERTIFICATE, origin=ACQUIRED); item -> done",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-01"],
+          "br": ["BR-01", "BR-18"],
+          "given": "a parsed extraction and a profile with an in-progress Enrollment for the catalog item",
+          "when": "confirmAndWriteSkill({ profileId, catalogItemId, skill }) is called on confirm",
+          "then": "exactly one EmployeeSkill row exists with trustState=VERIFIED, source=CERTIFICATE, origin=ACQUIRED; the returned object matches { source:'certificate', state:'verified', verified:true }; and the Enrollment status becomes COMPLETED (itemStatus 'done')",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-01 confirm -> verified write + item done"
+        },
+        {
+          "scenario_id": "S2-P2-02",
+          "title": "Each multi-skill entry written verified, including the null-date/level one",
+          "test_type": "integration",
+          "priority": "P1",
+          "ac": ["AC-02"],
+          "br": ["BR-01", "BR-18"],
+          "given": "a multi-skill extraction (one entry has null date and null level)",
+          "when": "confirmAndWriteSkill is called for each extracted skill",
+          "then": "every confirmed skill is written verified (source=certificate, state=verified, verified=true) — the null-date/null-level entry writes successfully, proving ambiguous optional fields do not break the write",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-02 confirm each multi-skill entry verified"
+        },
+        {
+          "scenario_id": "S2-P2-03",
+          "title": "Promotion in place on the same canonical record; no duplicate row",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-22"],
+          "br": ["BR-18"],
+          "given": "employee synthetic-handle-001 already holds TypeScript as a self-reported baseline EmployeeSkill (seed line ~156)",
+          "when": "a TypeScript certificate is confirmed and written via confirmAndWriteSkill",
+          "then": "the SAME EmployeeSkill row is promoted in place to VERIFIED (same row id; createdNewRow=false), and the count of EmployeeSkill rows for (employee, TypeScript canonical skill) remains exactly 1 (no duplicate)",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-22 single canonical record promoted in place"
+        },
+        {
+          "scenario_id": "S2-P2-04",
+          "title": "Re-assert at equal-or-lower trust is a no-op; never demotes",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-22"],
+          "br": ["BR-18"],
+          "given": "a skill already at VERIFIED",
+          "when": "the same skill is re-confirmed (verified again) or a lower-trust write is attempted",
+          "then": "upsertAndPromoteSkill no-ops (state stays VERIFIED, createdNewRow=false), no duplicate row, no demotion",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-22 re-assert no-op, never demote"
+        },
+        {
+          "scenario_id": "S2-P2-05",
+          "title": "De-dupe advisor failure (TS-002) does not block the verified write",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-22"],
+          "br": ["BR-18"],
+          "given": "an unknown skill name and a Layer-2 skill-identity client that throws/returns invalid JSON (makeClaudeClientThatThrows / Garbled)",
+          "when": "confirmAndWriteSkill resolves the canonical skill and writes",
+          "then": "the confirm path does NOT throw/hang, the skill is written VERIFIED via a create-new canonical record keyed by the deterministic canonicalKey, and the key is flagged reconcilePending (isReconcilePending true) — degraded de-dupe, never a broken write",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "TS-002 de-dupe advisor failure falls back, write completes"
+        },
+        {
+          "scenario_id": "S2-P2-06",
+          "title": "Idempotent re-confirm of an already-promoted upload",
+          "test_type": "integration",
+          "priority": "P1",
+          "ac": ["AC-23"],
+          "br": ["BR-18", "BR-19"],
+          "given": "a confirmCertExtraction(uploadId, skills) call that already promoted the skills",
+          "when": "the same uploadId is confirmed again (double-click / retry)",
+          "then": "the action returns the existing promoted skills with no second promotion and no duplicate EmployeeSkill row",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "AC-23 idempotent re-confirm"
+        }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "SUB-TASK-3 — cert-parsing tests against fixtures (executable mirror + evidence)",
+      "scenarios": [
+        {
+          "scenario_id": "S2-P3-01",
+          "title": "S-01 happy path end-to-end against aws-saa-valid.pdf",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-01"],
+          "br": ["BR-01", "BR-09", "BR-18"],
+          "given": "test setup created Employee id='p-001' + CatalogItem id='cat-aws-saa' + an in-progress Enrollment(p-001, cat-aws-saa) (§2.4 — these ids are NOT seeded); the Claude spy returns the SAME FLAT object as the authored AC-01 ({skill:'AWS Certified Solutions Architect', issuer, date, level, confidence:0.96}); fixtures/certs/aws-saa-valid.pdf",
+          "when": "parseCertificate({file:CERT_FIXTURES.validAwsSaa, claude}) then confirmAndWriteSkill({profileId:'p-001', catalogItemId:'cat-aws-saa', skill:parsed.skills[0]}) (same calls + ids as the authored test)",
+          "then": "boundary invoked once; parsed.ok===true; written.skill matchObject {source:'certificate', state:'verified', verified:true}; written.itemStatus==='done'; ONE EmployeeSkill VERIFIED/CERTIFICATE/ACQUIRED; Enrollment(p-001,cat-aws-saa) COMPLETED (mirrors authored cert-parsing.test.ts AC-01 exactly)",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "S-01 cert happy path e2e"
+        },
+        {
+          "scenario_id": "S2-P3-02",
+          "title": "S-02 multi-skill end-to-end against multi-skill-bootcamp.pdf",
+          "test_type": "integration",
+          "priority": "P1",
+          "ac": ["AC-02"],
+          "br": ["BR-09", "BR-18"],
+          "given": "fixtures/certs/multi-skill-bootcamp.pdf and a 2-skill scripted response (one null date/level)",
+          "when": "upload -> parse -> confirm each skill",
+          "then": "all skills returned + Zod-valid; each written verified; the null-date entry did not break the write (mirrors authored AC-02)",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "S-02 multi-skill e2e"
+        },
+        {
+          "scenario_id": "S2-P3-03",
+          "title": "S-03 failure path against not-a-cert.png + forced invalid JSON",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-03"],
+          "br": ["BR-02", "BR-09"],
+          "given": "fixtures/certs/not-a-cert.png and makeClaudeClientGarbled()",
+          "when": "upload -> parse",
+          "then": "parsed.ok false; exact spec'd message; NO EmployeeSkill written; the Enrollment stays in-progress (not COMPLETED) (mirrors authored AC-03)",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "S-03 failure path, nothing written, item in-progress"
+        },
+        {
+          "scenario_id": "S2-P3-04",
+          "title": "S-22 promotion: same record promoted, re-confirm no-op",
+          "test_type": "integration",
+          "priority": "P0",
+          "ac": ["AC-22"],
+          "br": ["BR-18"],
+          "given": "pre-seeded self-reported TypeScript on synthetic-handle-001",
+          "when": "a TypeScript cert is confirmed, then re-confirmed",
+          "then": "same row id promoted to verified; no duplicate; re-confirm is a no-op",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "S-22 single-record promotion"
+        },
+        {
+          "scenario_id": "S2-P3-05",
+          "title": "S-23 idempotency: same file twice -> one Certificate, one skill, one promotion",
+          "test_type": "integration",
+          "priority": "P1",
+          "ac": ["AC-23"],
+          "br": ["BR-19"],
+          "given": "the same cert file submitted twice",
+          "when": "both submissions are processed",
+          "then": "exactly one Certificate row, one EmployeeSkill, one verified promotion",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "S-23 idempotent double-submit"
+        },
+        {
+          "scenario_id": "S2-P3-06",
+          "title": "Section-8 metric: a majority of cert fixtures parse to valid validated JSON",
+          "test_type": "integration",
+          "priority": "P1",
+          "ac": ["AC-01", "AC-02"],
+          "br": ["BR-09"],
+          "given": "the cert fixtures (valid + multi-skill should parse; not-a-cert should fail)",
+          "when": "each fixture is parsed (valid ones via scripted/live structured responses)",
+          "then": "a majority of fixtures produce CertParseResult-valid JSON (the two valid certs succeed; the non-cert fails) — proving the §8 metric without faking intelligence",
+          "test_file": "tests/cert-parsing.test.ts",
+          "test_function": "Section-8 majority-parse metric"
+        }
+      ]
+    }
+  ]
+}

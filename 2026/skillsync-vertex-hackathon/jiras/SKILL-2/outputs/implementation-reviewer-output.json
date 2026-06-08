@@ -1,0 +1,63 @@
+{
+  "agent_id": "nulogic-implementation-reviewer",
+  "jira_id": "SKILL-2",
+  "iteration": 3,
+  "status": "needs_revision",
+  "total_findings": 1,
+  "new_gaps_found": 0,
+  "review_results": {
+    "ac_coverage": { "passed": 5, "failed": 0, "total": 5 },
+    "architecture_alignment": { "passed": 4, "failed": 0, "total": 4 },
+    "codebase_patterns": { "passed": 4, "failed": 0, "total": 4 },
+    "test_scenarios": { "passed": 20, "failed": 0, "total": 20 },
+    "tactical_adrs": { "passed": 2, "failed": 0, "total": 2 },
+    "diff_budget": { "passed": 1, "failed": 0, "total": 1 },
+    "reuse_validation": { "passed": 9, "failed": 0, "total": 9 },
+    "phase_ordering": { "passed": 4, "failed": 0, "total": 4 }
+  },
+  "gaps_found": { "critical": 0, "high": 0, "medium": 1, "low": 0 },
+  "tactical_adrs_approved": true,
+  "human_review_required": false,
+  "next_stage_ready": false,
+  "feedback": [
+    {
+      "id": "F-09",
+      "severity": "medium",
+      "category": "tactical_adrs",
+      "description": "COUNT_DRIFT residue / ADR description stale (Step 11 cross-artifact reconciliation). The iteration-3 revision correctly reconciled the test-scenario count to 20 across the three places the prior finding F-08 named (test-scenarios.json counts.test_scenarios=20 line 17; implementation-plan.md §14 Counts line 321 = '20 (P0:2, P1:6, P2:6, P3:6)'; implementation-plan.md §8 Phase 1 TEST SCENARIOS line 215 now lists S2-P1-06; implementation-planner-output.json counts.test_scenarios=20, plan_complete event test_scenarios_count=20, and the test-scenarios artifact description all say 20). HOWEVER the fourth sub-item of the prior F-08 suggestion was NOT applied: implementation-planner-output.json line 30 (the tactical-adrs artifact description) still characterizes TADR-S2-01 as 'CertParseResult object-skills shape vs SKILL-1 string placeholder' — the SUPERSEDED iteration-1 decision. The actual tactical-adrs.md is the correct v2 (a z.preprocess normalizer accepting flat-object | top-level-array | already-canonical envelope and emitting a derived top-level confidence). The planner-output JSON metadata therefore contradicts the artifact it describes. Although the iteration-3 revision note on line 9 explicitly asserts 'No design, schema, scenario content, or ADR changes,' the F-08 remediation explicitly asked to 'align the stale description while reconciling counts' — so this is an unresolved carry-forward of a named prior finding, not a new gap. Impact is bounded (the test-creator and implementer consume tactical-adrs.md, which is correct; this is a prose mischaracterization in the planner's own output-bookkeeping field, not a contract/identifier/count mismatch), hence MEDIUM, but per the convergence gate (0 findings at all severities) it must be corrected before next_stage_ready.",
+      "suggestion": "In implementation-planner-output.json line 30, replace the TADR-S2-01 description with its actual v2 decision, e.g.: \"TADR-S2-01 v2 (CertParseResult reworked to a z.preprocess normalizer that accepts the flat single-skill object [AC-01], the top-level array [AC-02], and an already-canonical envelope, emitting a canonical {skills[], issuer?, confidence} with a derived top-level confidence = min(per-skill) for the array case so the callClaude gate fires for single- AND multi-skill)\". No other artifact change is required — the counts and §8/§14 narrative are now consistent and were verified by enumeration."
+    }
+  ],
+  "verification_notes": {
+    "count_reconciliation_verified": "Enumerated test-scenarios.json: Phase 0 = S2-P0-01,02 [2]; Phase 1 = S2-P1-01..06 [6, incl. the F-02 multi-skill sub-threshold gate scenario S2-P1-06]; Phase 2 = S2-P2-01..06 [6]; Phase 3 = S2-P3-01..06 [6]; total = 20. counts.test_scenarios=20 (line 17). implementation-plan.md §14 (line 321) = '20 (P0:2, P1:6, P2:6, P3:6)'. implementation-plan.md §8 Phase 1 TEST SCENARIOS (line 215) explicitly lists S2-P1-06 (multi-skill sub-threshold ⇒ derived min(per-skill) gate fires, BR-02/F-02). implementation-planner-output.json counts.test_scenarios=20, plan_complete.test_scenarios_count=20, test-scenarios artifact description='20 ... P1:6'. The only residual drift is the stale ADR DESCRIPTION (F-09), not a count.",
+    "s2_p1_06_present_both_places": "S2-P1-06 confirmed present in BOTH test-scenarios.json (lines 121-132) AND implementation-plan.md §8 Phase 1 TEST SCENARIOS list (line 215) — the prior F-08 gap (scenario in JSON but absent from the plan phase narrative) is RESOLVED.",
+    "schema_gate_caveat_holds": "Re-verified against the repo: lib/ai/claude.ts:139-144 fires the confidence gate ONLY when typeof confidence === 'number'; an absent/undefined top-level confidence SKIPS the gate (silent pass). TADR-S2-01 v2's inner envelope makes top-level confidence REQUIRED (z.number().min(0).max(1)), so a successful safeParse always yields a numeric scalar and the gate cannot be bypassed; a flat object/array lacking confidence safeParse-FAILS (the safe outcome). zod is ^4.4.3 in package.json (matches the empirical v2 verification). Claim HOLDS.",
+    "current_placeholder_confirmed": "src/schemas/CertParseResult.ts is still the SKILL-1 placeholder (skills: z.array(z.string().min(1)).min(1), issuer optional, confidence) — TADR-S2-01 v2's EXTEND is required and correctly scoped; src/prompts/parse-certificate.ts uses variable `text` (line 7), confirming the F-07 fileRef→text reconciliation.",
+    "reuse_interfaces_read": "Verified signatures against the repo: resolveCanonicalSkill(raw, { client? })->Promise<string> with the TS-002 markReconcilePending fallback (lib/repos/skill.ts:49-103, :87, :93-102); upsertAndPromoteSkill(employeeId, skillId, targetState, source, origin)->{state, createdNewRow}, monotonic, no demote, no dup row (:122-160). Injected-client spy contract matches both tests/setup/test-helpers.ts and the e2e setup/test-helpers.ts (makeClaudeClientSpy serializes JSON.stringify(scriptedResponse) into one text block). prisma/seed.ts:155-156 confirms employee #1 always carries a TypeScript baseline (promotion fixture sound). All BUILD-NEW decisions (lib/cert/parse-certificate.ts, route.ts, app/actions/cert.ts, lib/hash.ts, lib/cert/config.ts, tests/cert-parsing.test.ts) verified to have no existing analog (no app/api, no app/actions, no lib/cert, no sha256/createHash util).",
+    "auth_scope_sound": "AC-24 (session expiry) maps to auth-oauth.test.ts per e2e-tests/README.md line 39 — a separate auth story, NOT in SKILL-2's AC set (AC-01/02/03/22/23). The plan's getCallerEmployeeId() deny-by-default caller-identity seam (TODO(auth-story), cookies()/proxy.ts/AC-24 deferred) is a sound scope boundary, consistent with ADR-001. SUB-TASK-1/2 reference cookies()/proxy.ts/AC-24 in pseudocode; the plan correctly documents these as deferred per the evidence hierarchy (the authored test asserts no session and the auth surface does not exist in the repo).",
+    "authored_test_reconciliation": "cert-parsing.test.ts imports @/lib/cert/parse-certificate via loadModule and hard-codes profileId='p-001' + catalogItemId='cat-aws-saa'|'cat-kubernetes'|'cat-docker', none of which are seeded (seed uses cuid ids + synthetic handles, no Enrollment rows). The plan §2.4/Phase 3 correctly assigns materialization of these ids + in-progress Enrollment to the SUB-TASK-3 suite, with the promotion scenario (S2-P3-04) using the seeded synthetic-handle-001 cuid — consistent with e2e-tests/README.md ('code-writer makes them pass one by one'). Feasible: Employee.id @default(cuid()) is overridable; Enrollment @@unique([employeeId, catalogItemId]) supports the per-(p-001, cat-*) in-progress rows."
+  },
+  "prior_findings_resolution": {
+    "F-01": "RESOLVED (re-verified) — CertParseResult v2 z.preprocess normalizer safeParses the flat-object and top-level-array payloads true.",
+    "F-02": "RESOLVED (re-verified) — derived top-level confidence=min(per-skill) for the array case; S2-P1-06 covers a sub-threshold per-skill entry and is present in both test-scenarios.json and plan §8.",
+    "F-03": "RESOLVED — test-scenarios.json GIVEN payloads mirror the authored spy payloads verbatim (flat object / top-level array, not rewritten into envelopes).",
+    "F-04": "RESOLVED — §2.4/Phase 3 specify explicit creation of p-001 + cat-* + in-progress Enrollment; promotion uses the seeded synthetic-handle-001 cuid; feasibility re-confirmed against schema/seed.",
+    "F-05": "RESOLVED — Page 02 §2.5 quoted verbatim with its 'representative pseudo-schema' framing; Divergence A (per-skill date/issuer, optional top-level issuer) recorded honestly per the evidence hierarchy.",
+    "F-06": "RESOLVED — auth scoped to a caller-identity seam (own-profile deny-by-default); AC-24/cookies/proxy.ts deferred to the auth story (AC-24 confirmed outside SKILL-2's AC set, maps to auth-oauth.test.ts).",
+    "F-07": "RESOLVED — prompt variable pinned to `text` (matches src/prompts/parse-certificate.ts:7); BR-09 no-fabrication; deferred live file->text extraction returns Failure; wiring-trace row present.",
+    "F-08": "PARTIALLY RESOLVED — the test-scenario count is now reconciled to 20 across test-scenarios.json, implementation-plan.md §8/§14, and implementation-planner-output.json (counts + plan_complete event + artifact description), and S2-P1-06 was added to plan §8 Phase 1. The fourth sub-item (align the stale TADR-S2-01 'object-skills shape' description in implementation-planner-output.json line 30) was NOT applied and is re-raised as F-09."
+  },
+  "artifacts_created": [
+    "outputs/implementation-reviewer-output.json"
+  ],
+  "built_from": {
+    "implementation_plan": "artifacts/06-planning/implementation-plan.md",
+    "test_scenarios": "artifacts/06-planning/test-scenarios.json",
+    "tactical_adrs": "artifacts/06-planning/tactical-adrs.md",
+    "planner_output": "outputs/implementation-planner-output.json",
+    "story": "STORY.md + SUB-TASK-1/2/3",
+    "target_state_architecture": "artifacts/03-architecture/target-state (Pages 02,03,05 — referenced via plan/STORY)",
+    "acceptance_tests": "artifacts/02-acceptance-tests/e2e-tests/cert-parsing.test.ts + setup/test-helpers.ts + README.md",
+    "code_repo": "ai-nu-skillsync @ feature/SKILL-2-cert-parsing (verified: lib/ai/claude.ts, src/schemas/CertParseResult.ts, src/prompts/parse-certificate.ts, lib/repos/skill.ts, prisma/seed.ts, tests/setup/test-helpers.ts, package.json)"
+  }
+}
