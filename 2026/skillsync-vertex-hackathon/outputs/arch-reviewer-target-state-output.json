@@ -1,0 +1,71 @@
+{
+  "initiative_id": "skillsync-vertex-hackathon",
+  "agent": "nulogic-arch-reviewer",
+  "stage": "architecture-design",
+  "review_scope": "target-state",
+  "iteration": 1,
+  "status": "completed_with_findings",
+  "review_results": {
+    "red": 0,
+    "yellow": 4,
+    "green": "majority (design substantially compliant)",
+    "constraint_violations": 0,
+    "pages_reviewed": 5,
+    "prd_mismatches": 0,
+    "phase_violations": 0,
+    "gap_coverage": "32/32",
+    "ac_coverage": "27/27"
+  },
+  "findings_count": 4,
+  "findings": [
+    {
+      "id": "TS-001",
+      "severity": "yellow",
+      "description": "Data-model correctness: Page 03 claims the existing EmployeeSkill @@unique([employeeId, skillId]) IS the BR-18 single-record key, but it only enforces single-record per skillId. The BR-18 invariant requires one record per SEMANTIC skill. The verified starter schema has Skill.name @unique only (schema.prisma:42) and no canonicalKey; Page 03 adds canonicalKey but does NOT mark it unique nor define how resolveCanonicalSkill forces a semantic match to reuse one Skill.id. Two Skill rows for the same concept (e.g. 'TypeScript' vs 'TS') would allow two EmployeeSkill rows — the exact hero-loop duplicate-row failure signature P4/AC-22 exist to prevent.",
+      "suggestion": "Mark Skill.canonicalKey @unique (or have resolveCanonicalSkill upsert/return the canonical Skill.id by canonicalKey), and restate Page 03 §1/§6.1 as 'single-record per CANONICAL skill — @@unique is necessary but not sufficient until skillId is resolved to the canonical Skill.'"
+    },
+    {
+      "id": "TS-002",
+      "severity": "yellow",
+      "description": "Extra live-model dependency on the P0 hero write path: Page 02 §4.1 places the Claude skill-identity de-dupe call synchronously inside confirmCertExtraction (the loop's promote step), adding a second model call beyond the parse, with NO specified behavior if skill-identity fails or is unreachable. The parse path has an explicit failure UX; the identity call does not — so the most-protected loop step can hang/error after a successful parse+confirm.",
+      "suggestion": "Specify the skill-identity failure fallback on the write path (e.g. use a deterministic canonicalKey normalization as the persistence key with Claude only suggesting merges, or treat identity-call failure as create-as-new-and-reconcile) so a single P0 step does not depend on two live model calls. Composes with TS-001."
+    },
+    {
+      "id": "TS-003",
+      "severity": "yellow",
+      "description": "API contract ambiguity: runMatch is listed in the Server Actions (mutations) table (Page 02 §3.1) yet annotated 'may be an action or a handler'. A staffing search is a read, not a mutation, and the transport is left undecided on a P0 capability — affecting caching and idempotency reasoning.",
+      "suggestion": "Decide and document runMatch transport (recommend an RSC data function or a read-only GET Route Handler), and move it out of the mutations table."
+    },
+    {
+      "id": "TS-004",
+      "severity": "yellow",
+      "description": "Idempotency not DB-enforced: ADR-004 / Page 02 §3.2 / Page 03 §6.1 key idempotency on (employeeId, contentHash) and call it the integrity backbone of the loop, but the data model declares no DB uniqueness constraint on contentHash for Certificate/Resume. It relies on an app-layer 'seen before?' check only, which is racy under genuine double-submit (AC-23 / BR-19).",
+      "suggestion": "Add @@unique([employeeId, contentHash]) to Certificate and Resume in Page 03 so AC-23 idempotency is DB-enforced, matching the rigor applied to the BR-18 key."
+    }
+  ],
+  "council_review_required": true,
+  "council_approval_status": "pending",
+  "council_flags": [
+    {
+      "trigger": "new-tech-stack / third-party-dependency / vendor-lock",
+      "title": "Auth.js (NextAuth) adoption for real Google OAuth (ADR-001)",
+      "description": "ADR-001 introduces Auth.js (NextAuth) + Google OIDC as a net-new third-party auth dependency not in the current-state stack (current-state records 'Auth: none, missing entirely'). Real authentication is a security-boundary + new-vendor/library decision. ADR-001 is well-reasoned (Clerk/Auth0/hand-rolled alternatives considered; PII-storing SaaS correctly rejected), so this is a SOFT flag for parallel council visibility, not a stop. The task explicitly named Auth.js as a council trigger to detect.",
+      "location": "Page 02 §3.2 (/api/auth/[...]); Page 05 ADR-001",
+      "rationale": "Under NULogic council policy a new auth library + external IdP normally warrants council visibility. Cannot be independently cleared here because arch-council-policy.md is absent from this environment (see report §0). Anthropic SDK is NOT flagged — it is CLAUDE.md-mandated and already in the installed stack."
+    }
+  ],
+  "standards_availability_caveat": "architecture-principles/*.md, adr-policy.md (T1-T23 ADR triggers), and arch-council-policy.md (C-triggers) were NOT found in this environment. Review proceeded against the effective in-repo baseline (CLAUDE.md non-negotiables, NULogic org instructions, current-state 03-tech-stack.md, and task-named council heuristics). YELLOWs therefore name the deviation + corrective action rather than citing an ADR-policy trigger number; the Auth.js council flag is raised for visibility and could not be definitively cleared. Recommend re-run with real standards files.",
+  "next_stage_ready": true,
+  "built_from": {
+    "prd": "v1",
+    "acceptance_criteria": "v1",
+    "business_rules": "v1",
+    "current_state_architecture": "v1",
+    "target_state_architecture": "v1"
+  },
+  "artifacts_created": [
+    "artifacts/03-architecture/target-state-review/review-report.md",
+    "outputs/arch-reviewer-target-state-output.json"
+  ],
+  "reviewed_at": "2026-06-05"
+}

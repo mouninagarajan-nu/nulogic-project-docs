@@ -1,0 +1,14 @@
+{
+  "workflow_stage": "acceptance-testing",
+  "context": {
+    "previous_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/prd.v1.md",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/acceptance-criteria.v1.json",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/business-rules.v1.md"
+    ],
+    "context_artifacts": [
+      {"artifact_type": "testing-standard", "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/testing.md", "priority": "optional"}
+    ],
+    "tech_stack_note": "Next.js 16 + React 19 + TS; test runner NOT yet chosen in repo (no test script exists). Author E2E acceptance scenarios in GIVEN-WHEN-THEN and accompanying FAILING executable test stubs in a framework-agnostic-but-runnable form (prefer Vitest-style for this Next.js/TS repo). Cert + resume parsing tests run against fixtures/certs/ (synthetic)."
+  }
+}

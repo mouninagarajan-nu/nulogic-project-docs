@@ -1,0 +1,75 @@
+{
+  "initiative_id": "skillsync-vertex-hackathon",
+  "agent": "nulogic-prd-reviewer",
+  "artifact": "prd-reviewer-output",
+  "stage": "01-intent",
+  "sub_agent": "reviewer",
+  "iteration": 2,
+  "review_mode": "clean-slate (full independent review; not a verification of prior fixes)",
+  "review_scope": [
+    "requirement_completeness",
+    "ac_testability",
+    "br_coverage",
+    "scope_clarity",
+    "consistency",
+    "stakeholder_gaps"
+  ],
+  "reviewed_artifacts": [
+    "artifacts/01-intent/prd.v1.md",
+    "artifacts/01-intent/acceptance-criteria.v1.json",
+    "artifacts/01-intent/scope-boundary.v1.md",
+    "artifacts/01-intent/business-rules.v1.md",
+    "artifacts/01-intent/repository-discovery.v1.json"
+  ],
+  "source_one_pager": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/docs/SPEC.md",
+  "status": "CHANGES_REQUESTED",
+  "total_findings": 3,
+  "new_gaps_found": 3,
+  "auth_override_assessment": {
+    "verdict": "COHERENTLY_DOCUMENTED",
+    "note": "The product-owner-introduced MVP additions (real Google OAuth restricted to nulogic.io, baseline current-skills, employee self-service skill editing, manager approval of self-reported skills, resume-upload->Claude extraction) supersede the original SPEC §2/§8 and CLAUDE.md fake-auth non-goal. Per directive this was reviewed for COHERENCE only and is NOT flagged as an inconsistency. It is coherently documented and consistent across all five artifacts: PRD top override notice + UC-6/6b/7/8/9/10 + §4 guardrails + §9 NFRs; AC-14..AC-25; scope-boundary In-Scope move with the deferred remainder explicitly bounded; BR-13/13a/14/15/16/17/18/19/20/21; repository-discovery dependency note. The synthetic-handle mapping (BR-13a) correctly keeps real PII out of the store. No incoherence found in the override itself."
+  },
+  "coverage_summary": {
+    "one_pager_capabilities_traced": "All SPEC capabilities (§5A Upskilling Tracker, §5B Staffing Matcher, §5 Catalog, §6 the loop) and all five new MVP additions trace to a PRD use case (UC-1..UC-10) and at least one AC. No phantom requirements.",
+    "personas": "All four SPEC §3 personas (Admin, Manager/HR, Practice Lead, Employee) represented; no invented personas.",
+    "business_rules": "BR-01..BR-21 reviewed. All except BR-11 have at least one validating AC. BR-11 (plan minimum + AI-enabled rule) has narrative-only coverage and no pass/fail AC — see PRD-R2-001.",
+    "error_paths": "Cert parse, resume parse, staffing search, catalog add, progress summary, sign-in, session expiry, partial-quantity, duplicate upload, role-scope, skill approval, self-service, admin role-assign all have explicit user-visible error/empty paths. Gap: the plan-minimum constraint has no enforcement/error flow — see PRD-R2-002.",
+    "repository_discovery": "DISCOVERY_COMPLETE for the declared single-repo learning run; new MVP items introduce no new repos (correctly noted). No discovery gap.",
+    "scope_clarity": "In/out scope clear and justified; Admin scope explicitly bounded to role-assign; session hardening + broader admin config explicitly deferred. Clear."
+  },
+  "feedback": [
+    {
+      "id": "PRD-R2-001",
+      "severity": "high",
+      "category": "br_coverage / ac_testability",
+      "description": "BR-11 (an employee's upskilling plan MUST contain at least 2-3 catalog items, of which at least one is AI-enabled) is a stated, enforceable business rule that the §8 compliance success metric ('Live % vs the 2-3/year target') depends on — yet NO acceptance criterion validates it. 'AI-enabled' appears in the AC set only inside AC-09 (catalog tagging), never as a plan-selection constraint. The acceptance-criteria coverage_matrix has no row for BR-11. With no pass/fail gate, plan-minimum enforcement and the compliance % computation will be built inconsistently or omitted.",
+      "suggestion": "Add a P1 AC (e.g. AC-26) with GIVEN an employee assembling their yearly plan / WHEN they attempt to finalize a plan with fewer than 2 items OR zero AI-enabled items / THEN the plan is rejected with a specific user-facing message and is NOT marked complete; and GIVEN a plan with >=2 items including >=1 AI-enabled / THEN it is accepted and counts toward the compliance metric. Add a coverage_matrix row mapping BR-11 -> the new AC."
+    },
+    {
+      "id": "PRD-R2-002",
+      "severity": "medium",
+      "category": "requirement_completeness / flow_gap",
+      "description": "UC-1 lists the action 'select >=2-3 items (must include >=1 AI-enabled)' but no user journey covers the boundary/error behavior of the plan-selection constraint: what the user SEES when they try to finalize a non-conforming plan (too few items or no AI-enabled item), and whether items can be removed/swapped after selection. The empty-state references the requirement narratively but the enforcement flow and its error message are undefined (silence = undefined behavior). This is the flow-level counterpart to PRD-R2-001 (the missing AC).",
+      "suggestion": "In UC-1 (or a short dedicated journey) document the plan-validation flow: the explicit rule (>=2-3 items, >=1 AI-enabled), the user-facing message on a non-conforming attempt, and the remove/replace-an-item path. Mirror it in the §10 Error Handling table (Flow: Plan selection / Invalid input: <2 items or 0 AI-enabled / User sees: <message>)."
+    },
+    {
+      "id": "PRD-R2-003",
+      "severity": "low",
+      "category": "ac_testability / scope_clarity",
+      "description": "The optional manager 'endorsed' catalog flag is listed as in-scope (PRD UC-5 'Manager may set an endorsed flag'; scope-boundary In-Scope 'optional manager endorsed flag') but has no validating AC, so its behavior (who may set it, what it affects in matching/recommendations) is untested and ambiguous. Minor tension with scope-boundary line 79, which lists 'endorsement workflows' as a creep risk — the single flag is in-scope while workflows around it are out; the distinction is coherent but the flag's exact, testable behavior is unspecified.",
+      "suggestion": "Either add a brief P2 AC for the endorsed flag (GIVEN a manager / WHEN they toggle 'endorsed' on a catalog item / THEN the item is marked endorsed and a non-manager cannot set it), or explicitly demote it to a clearly labeled nice-to-have / drop it to remove the loose end. Reaffirm in scope that only the flag (not any workflow) is in-scope."
+    }
+  ],
+  "marks_summary": {
+    "requirements": "All COMPLETE/traceable except the plan-minimum constraint flow (INCOMPLETE — PRD-R2-002).",
+    "business_flows": "FLOW_COMPLETE for all Claude-backed and auth flows; FLOW_GAP on plan-selection enforcement (PRD-R2-002).",
+    "ac_testability": "AC-01..AC-25 all TESTABLE with concrete inputs/outputs and edge/error coverage; no PII-demanding ACs; no orphans. Gaps are a MISSING AC for BR-11 (PRD-R2-001) and the endorsed flag (PRD-R2-003), not an untestable existing AC.",
+    "business_rules": "BR-01..BR-10, BR-12..BR-21 COVERED with validating ACs. BR-11 NO_AC (PRD-R2-001).",
+    "resilience_integration": "COVERED — double-submit idempotency (BR-19/AC-23), session expiry (BR-20/AC-24), Claude-unreachable degraded modes per flow, monotonic skill promotion avoids concurrent-promotion conflicts (BR-18).",
+    "scope_ops": "SCOPE_CLEAR; rollback/monitoring appropriate to a hackathon MVP (role view-switcher fallback for OAuth; observability NFR logs Claude call boundaries).",
+    "consistency": "Terminology, requirement IDs (UC/AC/BR), and the auth-override narrative are consistent across PRD/ACs/scope/BRs/discovery. No orphan refs."
+  },
+  "previous_iteration_note": "Iteration 1 raised PRD-R1-001..007; this iteration-2 review is a fresh clean-slate pass (not a checkoff). Those prior items are observed as addressed in the artifacts (single-record skill promotion BR-18/AC-22, deterministic synthetic-handle mapping BR-13a/AC-14, session expiry BR-20/AC-24, idempotent uploads BR-19/AC-23, Admin role mgmt BR-21/AC-25, partial-quantity AC-21, resume-parse metric §8). The 3 findings here are NEW gaps surfaced by independent review.",
+  "next_stage_ready": false,
+  "gate_rationale": "next_stage_ready is false because total_findings (3) > 0 across all severities, per the convergence gate. The PRD is structurally strong and the auth override is coherently documented; the remaining gaps center on the BR-11 plan-minimum rule lacking a validating AC and an enforcement flow, plus an untested optional endorsed flag. Resolve the three findings and re-review for convergence."
+}

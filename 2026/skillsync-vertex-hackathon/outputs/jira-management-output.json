@@ -1,0 +1,82 @@
+{
+  "status": "success",
+  "jira_creation_mode": "local_only",
+  "jira_sync": {
+    "status": "skipped",
+    "reason": "user_chose_local_only"
+  },
+  "initiative_id": "skillsync-vertex-hackathon",
+  "stories": [
+    {
+      "id": "SKILL-1",
+      "title": "Foundation: synthetic data, trust-state persistence & the Claude intelligence boundary",
+      "epic": "EPIC-1",
+      "story_points": 8,
+      "subtask_count": 3,
+      "blocks": ["SKILL-2", "SKILL-3", "SKILL-5", "SKILL-6"],
+      "blocked_by": [],
+      "acs": ["AC-13", "AC-16"]
+    },
+    {
+      "id": "SKILL-2",
+      "title": "Certificate parsing → verified skills (the innovation hero)",
+      "epic": "EPIC-1",
+      "story_points": 5,
+      "subtask_count": 3,
+      "blocks": ["SKILL-4"],
+      "blocked_by": ["SKILL-1"],
+      "acs": ["AC-01", "AC-02", "AC-03", "AC-22", "AC-23"]
+    },
+    {
+      "id": "SKILL-3",
+      "title": "Staffing Matcher: availability-aware ranked shortlist",
+      "epic": "EPIC-1",
+      "story_points": 5,
+      "subtask_count": 3,
+      "blocks": ["SKILL-4"],
+      "blocked_by": ["SKILL-1"],
+      "acs": ["AC-04", "AC-05", "AC-06", "AC-21"]
+    },
+    {
+      "id": "SKILL-4",
+      "title": "The Hero Loop + Catalog Intelligence",
+      "epic": "EPIC-1",
+      "story_points": 8,
+      "subtask_count": 3,
+      "blocks": [],
+      "blocked_by": ["SKILL-1", "SKILL-2", "SKILL-3"],
+      "acs": ["AC-07", "AC-08", "AC-09", "AC-10", "AC-22", "AC-23", "AC-26", "AC-27"]
+    },
+    {
+      "id": "SKILL-5",
+      "title": "Profile Spine: baseline skills, self-service, manager approval & resume extraction",
+      "epic": "EPIC-2",
+      "story_points": 8,
+      "subtask_count": 3,
+      "blocks": ["SKILL-4", "SKILL-6"],
+      "blocked_by": ["SKILL-1"],
+      "acs": ["AC-16", "AC-17", "AC-18", "AC-19", "AC-20", "AC-22", "AC-23"]
+    },
+    {
+      "id": "SKILL-6",
+      "title": "Auth, Roles, Progress Summary & NULogic UI",
+      "epic": "EPIC-3",
+      "story_points": 8,
+      "subtask_count": 3,
+      "blocks": [],
+      "blocked_by": ["SKILL-1", "SKILL-5"],
+      "acs": ["AC-11", "AC-12", "AC-14", "AC-15", "AC-24", "AC-25", "AC-27"]
+    }
+  ],
+  "epic_count": 3,
+  "story_count": 6,
+  "acs_covered": 27,
+  "uncovered_acs": [],
+  "supporting_docs": [
+    "artifacts/04-jiras/story-map.md",
+    "artifacts/04-jiras/dependency-graph.md",
+    "artifacts/04-jiras/jira-summary.md",
+    "artifacts/04-jiras/traceability-matrix.md"
+  ],
+  "generated_at": "2026-06-05T00:00:00Z"
+}

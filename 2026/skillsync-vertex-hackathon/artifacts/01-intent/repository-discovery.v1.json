@@ -1,0 +1,27 @@
+{
+  "initiative_id": "skillsync-vertex-hackathon",
+  "artifact": "repository-discovery",
+  "version": "v1",
+  "discovery_method": "single-repo-declared",
+  "discovery_notes": "Per orchestrator directive: no remote GitHub org discovery for this hackathon. A single greenfield application repo houses all SkillSync work. config.github.orgs.shared_services is set to a personal account for a local learning run and was intentionally not queried. UPDATE (post-gate, 2026-06-05): new MVP requirements (real Google OAuth, resume parsing, baseline skills, manager approval, self-service skills) introduce no new repositories — all land in the same single app repo. Discovery result unchanged; only the noteworthy dependency 'Google OAuth / NextAuth-style auth' is noted on the repo entry.",
+  "greenfield": true,
+  "discovered_repositories": [
+    {
+      "name": "ai-nu-skillsync",
+      "org": "nulogic (Team Vertex)",
+      "url": "LOCAL-ONLY:C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+      "category": "application",
+      "relevance": "primary",
+      "priority": "P0",
+      "stack": "Next.js 16 (App Router) + React 19 + TypeScript + Tailwind v4 + shadcn/ui; pnpm; planned: @anthropic-ai/sdk, Prisma + SQLite, Zod; UPDATE: + Google OAuth (NextAuth/Auth.js-style) auth library",
+      "notes": "Fresh Next.js scaffold; SkillSync product not yet built. Top-level app/, components/, lib/, hooks/ (no src/). prisma/ and dev.db present. All initiative work (both modules, catalog, the loop, fixtures, prompts in src/prompts/) lands here. Next.js 16 has breaking changes — consult node_modules/next/dist/docs/ before writing Next.js code. UPDATE (post-gate, 2026-06-05): new MVP requirements add real Google OAuth (NextAuth/Auth.js-style, hosted-domain restricted to nulogic.io), resume parsing (synthetic fixtures in fixtures/resumes/), a skill state machine (self-reported/manager-approved/verified), and baseline-skill capture — all within this same single app repo. No new repos introduced. New env vars: Google OAuth client ID/secret (read from env, never committed)."
+    }
+  ],
+  "summary": {
+    "total_repositories": 1,
+    "primary": 1,
+    "by_category": { "application": 1 },
+    "remote_discovery_performed": false,
+    "rationale": "Hackathon MVP is a single self-contained Next.js app on NULogic Git; no cross-repo dependencies."
+  }
+}

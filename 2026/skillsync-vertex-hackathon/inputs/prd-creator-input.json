@@ -1,0 +1,23 @@
+{
+  "mode": "create",
+  "one_pager_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/docs/SPEC.md",
+  "strategic_constraints": {
+    "timeline": "Hackathon — demo must run end-to-end on synthetic data within the evaluation window",
+    "risk_tolerance": "medium"
+  },
+  "scope_note": "Hackathon MVP. Synthetic data only, no real PII. All intelligence (cert parsing, matching/ranking, catalog de-dupe/tag/enrich/recommend) MUST go through the Claude API — no hardcoded/regex substitutes. Fake auth via role view-switcher (no real auth). Target: ~20-25 synthetic profiles. Protect the hero loop: cert upload -> profile updates -> re-run match improves.",
+  "context_artifacts": [
+    {
+      "artifact_type": "architecture-principle",
+      "path": "architecture-principles/README.md",
+      "description": "Architecture principles index",
+      "priority": "required"
+    },
+    {
+      "artifact_type": "business-context",
+      "path": "business-context/README.md",
+      "description": "Business context index",
+      "priority": "required"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "sub_phase": "target-state",
+  "previous_artifacts": [
+    "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/prd.v1.md",
+    "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/acceptance-criteria.v1.json",
+    "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/business-rules.v1.md",
+    "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/03-architecture/current-state/04-gap-analysis-modernization.md"
+  ],
+  "context_artifacts": [
+    {"artifact_type": "architecture-principle", "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/architecture-principles/README.md", "priority": "required"}
+  ],
+  "design_note": "Single Next.js 16 app (App Router, RSC) + Prisma/SQLite + @anthropic-ai/sdk (already installed). Design the target architecture for the SkillSync MVP: data model (Employee/Profile, Skill with trust-state machine self-reported->manager-approved->cert-verified, current project + allocation% + freeFrom, CatalogItem with aiEnabled/endorsed/tags/enrichment, UpskillingPlan, Certificate + Resume upload refs, OAuth-identity->synthetic-profile mapping table), API/route design (route handlers/server actions), the Claude integration layer (prompts in src/prompts/, Zod schemas, model routing Sonnet/Opus, prompt caching of profile dataset), auth (Google OAuth restricted to nulogic.io), and the hero loop. Keep it demo-pragmatic, NOT over-engineered. Strategic ADRs for the key choices (auth lib, persistence, Claude call patterns, file/upload handling, validation)."
+}

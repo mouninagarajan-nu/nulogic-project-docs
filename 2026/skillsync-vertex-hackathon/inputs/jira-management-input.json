@@ -1,0 +1,20 @@
+{
+  "workflow_stage": "jira-creation",
+  "context": {
+    "sizing_mode": "relaxed",
+    "max_stories": 6,
+    "jira_creation_mode": "local_only",
+    "story_target_note": "Product owner explicitly wants 5-6 MVP stories. Consolidate the 8-phase target-state roadmap into 5-6 cohesive, demo-deliverable stories. The hero loop (cert upload -> profile update -> sharper re-match) must be protected and clearly traceable across stories.",
+    "previous_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/prd.v1.md",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/acceptance-criteria.v1.json",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/business-rules.v1.md",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/scope-boundary.v1.md",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/01-intent/repository-discovery.v1.json",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/02-acceptance-tests/",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/03-architecture/current-state/",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/03-architecture/target-state/",
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/03-architecture/target-state-review/"
+    ]
+  }
+}

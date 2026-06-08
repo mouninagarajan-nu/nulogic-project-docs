@@ -1,0 +1,84 @@
+{
+  "initiative_id": "skillsync-vertex-hackathon",
+  "agent_id": "nulogic-jira-reviewer",
+  "status": "success",
+  "run_mode": "local_only",
+  "total_findings": 2,
+  "findings": [
+    {
+      "id": "F-001",
+      "story": "SKILL-1, SKILL-4, SKILL-5, SKILL-6",
+      "severity": "high",
+      "description": "Four stories sit at 8 story points — the agile-standards '8+ MUST SPLIT' threshold. SKILL-6 is T-shirt XL spanning roadmap Phase 7+8 (auth + all UI + progress + admin); SKILL-4 spans Phase 4+6 (loop + catalog + plan).",
+      "suggestion": "Human judgment, not auto-resolvable. Confirm 8-point stories are acceptable for the hackathon timebox (deliberate 6-story 'protect the loop / freeze' structure, LOC budgets <=~520, sub-tasks already split 3 ways), or split the two widest: SKILL-6 -> auth/roles vs UI, SKILL-4 -> loop vs catalog/plan. Advisory; no content change required to proceed."
+    },
+    {
+      "id": "F-002",
+      "story": "SKILL-4",
+      "severity": "low",
+      "description": "SKILL-4 / SUB-TASK-3 Failure Condition #3 paraphrases the AC-26 plan-rejection messages ('Pick at least 2 items.' / 'At least one item must be AI-enabled.') instead of the exact spec strings ('Pick at least 2 items for your plan.' / 'Your plan needs at least one AI-enabled item.'). The load-bearing Gherkin and pseudocode already use the exact spec strings.",
+      "suggestion": "Trivial / auto-resolvable: align the quoted strings in Failure Condition #3 to the exact AC-26/PRD wording. Cosmetic; does not affect implementation or the gate."
+    }
+  ],
+  "acs_covered": 27,
+  "acs_total": 27,
+  "uncovered_acs": [],
+  "brs_covered": 23,
+  "brs_total": 23,
+  "uncovered_brs": [],
+  "structural_pass": {
+    "SKILL-1": true,
+    "SKILL-2": true,
+    "SKILL-3": true,
+    "SKILL-4": true,
+    "SKILL-5": true,
+    "SKILL-6": true
+  },
+  "structural_pass_all": true,
+  "dependency_graph": {
+    "acyclic": true,
+    "blocks_blocked_by_consistent": true,
+    "critical_path": ["SKILL-1", "SKILL-2", "SKILL-3", "SKILL-4"]
+  },
+  "hero_loop_ac07_traceable": true,
+  "review_results": {
+    "stories_reviewed": 6,
+    "subtasks_reviewed": 18,
+    "epics_reviewed": 3,
+    "critical_findings": 0,
+    "high_findings": 1,
+    "medium_findings": 0,
+    "low_findings": 1,
+    "ac_coverage_pct": 100,
+    "br_coverage_pct": 100,
+    "template_compliance": "full (business persona, Business Context, Business Rules table, AC Mapping table, Architecture References, UX/Design, DoD, Risks & Assumptions, Progress Log present in all 6 stories; all 18 sub-tasks have >=3-step pseudocode, GOAL/CONSTRAINTS-with-ADR/FORMAT contract, DATA MODELS, 5 ERROR HANDLING, 5 FAILURE CONDITIONS)"
+  },
+  "auto_resolutions": [],
+  "human_review_items": [
+    {
+      "id": "F-001",
+      "severity": "high",
+      "type": "sizing",
+      "description": "Four stories at the 8-point split threshold; confirm hackathon-timebox acceptability or split SKILL-6/SKILL-4.",
+      "suggested_resolution": "Owner acknowledges the deliberate 6-story MVP structure, or splits the two widest stories."
+    }
+  ],
+  "artifacts_created": [
+    "artifacts/04-jiras/review/jira-review-report.v1.md",
+    "outputs/jira-reviewer-output.json"
+  ],
+  "human_review_required": true,
+  "next_stage_ready": true,
+  "built_from": {
+    "prd": "artifacts/01-intent/prd.v1.md",
+    "acceptance_criteria": "artifacts/01-intent/acceptance-criteria.v1.json",
+    "business_rules": "artifacts/01-intent/business-rules.v1.md",
+    "target_state_arch": "artifacts/03-architecture/target-state/",
+    "jira_creator_output": "outputs/jira-management-output.json"
+  },
+  "metadata": {
+    "version": "v1",
+    "generated_at": "2026-06-05T00:00:00Z",
+    "reviewer_version": "2.0"
+  }
+}
