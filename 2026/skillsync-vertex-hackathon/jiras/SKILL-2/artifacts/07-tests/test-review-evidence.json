@@ -1,0 +1,99 @@
+{
+  "jira_id": "SKILL-2",
+  "stage": "07-tests",
+  "reviewer": "nulogic-test-reviewer",
+  "iteration": 2,
+  "reviewed_at": "2026-06-08",
+  "red_run_evidence": {
+    "command": "pnpm test tests/cert-parsing.test.ts",
+    "total_tests": 16,
+    "passed": 0,
+    "failed": 16,
+    "failure_reason": "Cannot find package '@/lib/cert/parse-certificate' imported from tests/cert-parsing.test.ts",
+    "meaningful_red": true,
+    "failure_location": "tests/cert-parsing.test.ts:184 (loadCertModule())",
+    "vitest_version": "4.1.8"
+  },
+  "ac_mapping": {
+    "AC-01": { "status": "MAPPED", "test_ids": ["S2-P1-01", "S2-P2-01", "S2-P3-06"] },
+    "AC-02": { "status": "MAPPED", "test_ids": ["S2-P1-02", "S2-P2-02", "S2-P3-06"] },
+    "AC-03": { "status": "MAPPED", "test_ids": ["S2-P1-03", "S2-P1-04", "S2-P1-03-sdk", "S2-P1-06", "S2-P1-03-enrollment"] },
+    "AC-22": { "status": "MAPPED", "test_ids": ["S2-P2-03", "S2-P2-04", "S2-P2-05", "S2-AUTH-01"] },
+    "AC-23": { "status": "MAPPED", "test_ids": ["S2-P1-05", "S2-P2-06"] }
+  },
+  "scenario_coverage": {
+    "S2-P0-01": "EXCLUDED (justified)",
+    "S2-P0-02": "EXCLUDED (justified)",
+    "S2-P1-01": "SCENARIO_IMPLEMENTED",
+    "S2-P1-02": "SCENARIO_IMPLEMENTED",
+    "S2-P1-03": "SCENARIO_IMPLEMENTED",
+    "S2-P1-04": "SCENARIO_IMPLEMENTED",
+    "S2-P1-05": "SCENARIO_IMPLEMENTED",
+    "S2-P1-06": "SCENARIO_IMPLEMENTED",
+    "S2-P2-01": "SCENARIO_IMPLEMENTED",
+    "S2-P2-02": "SCENARIO_IMPLEMENTED",
+    "S2-P2-03": "SCENARIO_IMPLEMENTED",
+    "S2-P2-04": "SCENARIO_DIVERGENT (G2-03 — state-leak from S2-P2-03 means first confirm is already no-op)",
+    "S2-P2-05": "SCENARIO_IMPLEMENTED",
+    "S2-P2-06": "SCENARIO_IMPLEMENTED",
+    "S2-P3-01": "SCENARIO_UNTESTED (G2-01 — not in excluded_scenarios)",
+    "S2-P3-02": "SCENARIO_UNTESTED (G2-01 — not in excluded_scenarios)",
+    "S2-P3-03": "SCENARIO_UNTESTED (G2-01 — not in excluded_scenarios)",
+    "S2-P3-04": "SCENARIO_UNTESTED (G2-01 — not in excluded_scenarios)",
+    "S2-P3-05": "SCENARIO_UNTESTED (G2-01 — not in excluded_scenarios)",
+    "S2-P3-06": "SCENARIO_IMPLEMENTED"
+  },
+  "f01_verification": {
+    "finding": "F-01 CONFIRMED_RESOLVED",
+    "evidence_file": "tests/cert-parsing.test.ts",
+    "evidence_lines": "639-661",
+    "key_check": "layer2Client injected as top-level option to confirmAndWriteSkill",
+    "real_signature_verified": "lib/repos/skill.ts:49-52 — resolveCanonicalSkill(rawSkillName, opts: { client?: ClaudeClient } = {})",
+    "throw_path_verified": "lib/ai/claude.ts:121-124 — SDK throw caught, returns {ok:false, reason:'sdk'}; lib/repos/skill.ts:86-88 — non-ok advice triggers markReconcilePending",
+    "residual_concern": "G2-05 — reconcilePending Set never reset between tests"
+  },
+  "f02_verification": {
+    "finding": "F-02 CONFIRMED_RESOLVED",
+    "evidence_lines": "763-816",
+    "key_check": "callerEmployeeId='p-other-employee' injected; rejects.toThrow() asserted; EmployeeSkill.findMany returns 0"
+  },
+  "f03_verification": {
+    "finding": "F-03 PARTIALLY_RESOLVED",
+    "manifest_ids_corrected": true,
+    "gherkin_body_headings_corrected": false,
+    "residual": "G2-06 — Gherkin headings still read S2-P1-01b / S2-P1-02b"
+  },
+  "f04_verification": {
+    "finding": "F-04 CONFIRMED_RESOLVED",
+    "evidence_lines": "369-382",
+    "key_check": "Both certificate.findMany (certs.length===0) and employeeSkill.findMany (skills.length===0) asserted in S2-P1-03"
+  },
+  "f05_verification": {
+    "finding": "F-05 PARTIALLY_RESOLVED",
+    "ac01_fixed": "certSkills.length toBe(1) — line 243",
+    "ac23_fixed": "skills.length toBe(1) — line 752",
+    "ac02_not_fixed": "dbSkills.length toBeGreaterThanOrEqual(2) — line 310 — captured as G2-04"
+  },
+  "f09_verification": {
+    "finding": "F-09 PARTIALLY_RESOLVED",
+    "manifest_note_added": true,
+    "tadr_added": false,
+    "required_by_standard": "TADR (manifest note insufficient)",
+    "captured_as": "G2-02 high"
+  },
+  "global_state_evidence": {
+    "reconcile_pending_set": {
+      "file": "lib/repos/skill.ts",
+      "line": 34,
+      "declaration": "const reconcilePending = new Set<string>();",
+      "reset_mechanism": "none",
+      "concern": "G2-05 — Set grows across all tests in the worker; isReconcilePending can return stale-true from prior test"
+    }
+  },
+  "ac22_state_leak_evidence": {
+    "describe_setup": "beforeAll (not beforeEach) — only resolves syntheticEmployee001Id",
+    "s2_p2_03_side_effect": "promotes TypeScript to VERIFIED for synthetic-handle-001",
+    "s2_p2_04_first_confirm_state": "TypeScript is ALREADY VERIFIED when S2-P2-04 runs — first confirm is a no-op, not a SELF_REPORTED→VERIFIED promotion",
+    "concern": "G2-03 — scenario S2-P2-04's GIVEN state (SELF_REPORTED) not assured; test may pass for wrong reason"
+  }
+}

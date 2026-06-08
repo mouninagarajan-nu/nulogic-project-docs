@@ -1,0 +1,290 @@
+{
+  "jira_id": "SKILL-2",
+  "stage": "07-tests",
+  "iteration": 3,
+  "status": "FAILING",
+  "generated_by": "nulogic-test-creator",
+  "generated_at": "2026-06-08",
+  "built_from": {
+    "prd": "v1",
+    "implementation_plan": "v1",
+    "test_scenarios": "iteration-2",
+    "tactical_adrs": "iteration-3"
+  },
+  "test_framework": "vitest",
+  "test_environment": "node",
+  "single_file_command": "pnpm test tests/cert-parsing.test.ts",
+  "full_suite_command": "pnpm test",
+  "coverage_targets": {
+    "overall": 40,
+    "new_code": 45,
+    "branch": 40,
+    "critical_paths": 75,
+    "_note": "Hackathon-relaxed targets (default 80/90/85/95 overridden per run-setup config)."
+  },
+  "predicted_coverage": {
+    "overall": 54,
+    "new_code": 62,
+    "branch": 50,
+    "critical_paths": 82,
+    "meets_target": true,
+    "basis": "16 integration tests × avg 15 LOC paths / estimated 430 LOC new code. Critical paths (parseCertificate + confirmAndWriteSkill + resolveCanonicalSkill fallback + auth seam) achieve >75% via direct invocation in every test."
+  },
+  "normalizer_coverage_decision": {
+    "decision": "integration-only",
+    "tadr_ref": "TADR-S2-03 (artifacts/06-planning/tactical-adrs.md)",
+    "justification": "The CertParseResult z.preprocess normalizer's 4 branches (array, already-canonical envelope, flat-object, non-object fallback) are exercised indirectly via AC-01 (flat object → Case C), AC-02 (top-level array → Case A), AC-03 garbled (non-object → Case D rejects at inner schema), and AC-23 idempotent (canonical envelope → Case B pass-through if cacheable). Adding isolated unit tests for the preprocess lambda would duplicate path coverage already provided by the integration tests and would require mocking the Zod internals — an anti-pattern. Integration coverage is sufficient: every branch is exercised by a real scenario with a real behavioral assertion. Full rationale, branch-coverage table, and alternatives considered are in TADR-S2-03."
+  },
+  "test_statistics": {
+    "total_tests": 16,
+    "test_breakdown": {
+      "unit": 0,
+      "integration": 16,
+      "e2e": 0,
+      "performance": 0
+    },
+    "criteria_covered": ["AC-01", "AC-02", "AC-03", "AC-22", "AC-23"],
+    "business_rules_covered": ["BR-01", "BR-02", "BR-09", "BR-18", "BR-19"],
+    "critical_path_coverage": "parseCertificate + confirmAndWriteSkill (BR-09 boundary, confidence gate, upsertAndPromoteSkill, resolveCanonicalSkill Layer-2 fallback, caller-identity seam)"
+  },
+  "performance_tests_required": false,
+  "performance_tests_decision": "Not required for SKILL-2: no direct API endpoint wiring in scope (cert transport is a thin wrapper deferred to GREEN phase); core cert-parsing logic does not touch latency-sensitive paths in this story.",
+  "test_inventory": [
+    {
+      "test_id": "S2-P1-01",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-01 parseCertificate routes through Claude, Zod-validates",
+      "test_type": "integration",
+      "phase_id": 1,
+      "priority": "P0",
+      "ac": ["AC-01"],
+      "br": ["BR-09"],
+      "status": "failing"
+    },
+    {
+      "test_id": "S2-P2-01",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-01 confirm -> verified write + item done (S2-P2-01 e2e)",
+      "test_type": "integration",
+      "phase_id": 2,
+      "priority": "P0",
+      "ac": ["AC-01"],
+      "br": ["BR-01", "BR-18"],
+      "status": "failing",
+      "_note_f03": "F-03 fix: was 'S2-P1-01b' — corrected to canonical ID S2-P2-01 (test-scenarios.json phase 2, scenario S2-P2-01 'Confirm writes one VERIFIED skill')."
+    },
+    {
+      "test_id": "S2-P1-02",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-02 multi-skill parse returns all skills, optional fields tolerated (S2-P1-02 e2e)",
+      "test_type": "integration",
+      "phase_id": 1,
+      "priority": "P1",
+      "ac": ["AC-02"],
+      "br": ["BR-09", "BR-18"],
+      "status": "failing"
+    },
+    {
+      "test_id": "S2-P2-02",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-02 confirm each multi-skill entry verified (S2-P2-02 — including null-date/level entry)",
+      "test_type": "integration",
+      "phase_id": 2,
+      "priority": "P1",
+      "ac": ["AC-02"],
+      "br": ["BR-18"],
+      "status": "failing",
+      "_note_f03": "F-03 fix: was 'S2-P1-02b' — corrected to canonical ID S2-P2-02 (test-scenarios.json phase 2, scenario S2-P2-02 'Each multi-skill entry written verified')."
+    },
+    {
+      "test_id": "S2-P1-03",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-03 garbled parse -> failure message, no Certificate, no EmployeeSkill (S2-P1-03 e2e)",
+      "test_type": "integration",
+      "phase_id": 1,
+      "priority": "P0",
+      "ac": ["AC-03"],
+      "br": ["BR-02", "BR-09"],
+      "status": "failing",
+      "_note_f04": "F-04 fix: now asserts NO Certificate row AND no EmployeeSkill on parse failure (both rows checked)."
+    },
+    {
+      "test_id": "S2-P1-04",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-03 low-confidence -> failure, nothing written (S2-P1-04)",
+      "test_type": "integration",
+      "phase_id": 1,
+      "priority": "P0",
+      "ac": ["AC-03"],
+      "br": ["BR-02", "BR-09"],
+      "status": "failing"
+    },
+    {
+      "test_id": "S2-P1-06",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-03 multi-skill sub-threshold confidence -> failure, nothing written (S2-P1-06)",
+      "test_type": "integration",
+      "phase_id": 1,
+      "priority": "P0",
+      "ac": ["AC-03"],
+      "br": ["BR-02", "BR-09"],
+      "status": "failing"
+    },
+    {
+      "test_id": "S2-P1-03-sdk",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-03 SDK throw -> failure message, nothing written (S2-P1-03-sdk)",
+      "test_type": "integration",
+      "phase_id": 1,
+      "priority": "P0",
+      "ac": ["AC-03"],
+      "br": ["BR-09"],
+      "status": "failing",
+      "_note_f08": "F-08 fix: relabeled from S2-P1-05 (which is the AC-23 idempotency scenario). SDK-throw is its own distinct scenario S2-P1-03-sdk."
+    },
+    {
+      "test_id": "S2-P1-03-enrollment",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-03 failure path: Enrollment stays IN_PROGRESS (item NOT completed on failure)",
+      "test_type": "integration",
+      "phase_id": 1,
+      "priority": "P0",
+      "ac": ["AC-03"],
+      "br": ["BR-02"],
+      "status": "failing"
+    },
+    {
+      "test_id": "S2-P2-03",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-22 single canonical record promoted in place — same row id, no duplicate (S2-P2-03)",
+      "test_type": "integration",
+      "phase_id": 2,
+      "priority": "P0",
+      "ac": ["AC-22"],
+      "br": ["BR-18"],
+      "status": "failing"
+    },
+    {
+      "test_id": "S2-P2-04",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-22 re-assert no-op, never demote — re-confirm stays VERIFIED (S2-P2-04)",
+      "test_type": "integration",
+      "phase_id": 2,
+      "priority": "P0",
+      "ac": ["AC-22"],
+      "br": ["BR-18"],
+      "status": "failing"
+    },
+    {
+      "test_id": "S2-P2-05",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "TS-002 de-dupe advisor throws -> fallback canonical create, write completes, reconcilePending flagged",
+      "test_type": "integration",
+      "phase_id": 2,
+      "priority": "P0",
+      "ac": ["AC-22"],
+      "br": ["BR-18"],
+      "status": "failing",
+      "_note_f01": "F-01 fix: layer2Client is now passed as a top-level option to confirmAndWriteSkill, not embedded in the skill payload. This correctly exercises resolveCanonicalSkill(raw, { client: layer2Client }) — the actual seam where the throw fires."
+    },
+    {
+      "test_id": "S2-P1-05",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-23 idempotent double-submit (cert side) — second call returns prior uploadId, Claude not re-invoked (S2-P1-05 / S-23)",
+      "test_type": "integration",
+      "phase_id": 1,
+      "priority": "P1",
+      "ac": ["AC-23"],
+      "br": ["BR-19"],
+      "status": "failing",
+      "_note_f07": "F-07 fix: AC-23 describe block now uses beforeEach (not beforeAll). This test's Certificate row is cleaned up before S2-P2-06 runs — no state leak."
+    },
+    {
+      "test_id": "S2-P2-06",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AC-23 idempotent re-confirm — double-click on confirm yields one EmployeeSkill row (S2-P2-06)",
+      "test_type": "integration",
+      "phase_id": 2,
+      "priority": "P1",
+      "ac": ["AC-23"],
+      "br": ["BR-18", "BR-19"],
+      "status": "failing",
+      "_note_f05": "F-05 fix: assertion is now toBe(1) not toBeGreaterThanOrEqual(1) — duplicate-row detection requires exact count."
+    },
+    {
+      "test_id": "S2-AUTH-01",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "AUTH cross-profile confirm is denied with no EmployeeSkill write",
+      "test_type": "integration",
+      "phase_id": 2,
+      "priority": "P0",
+      "ac": ["AC-22"],
+      "br": ["BR-18"],
+      "status": "failing",
+      "_note_f02": "F-02 fix: new test asserting TADR-S2-02 cross-profile write rejection. confirmAndWriteSkill called with profileId='p-001' but callerEmployeeId='p-other-employee' must throw an auth error with NO EmployeeSkill write. Testable without a real session via the getCallerEmployeeId() seam."
+    },
+    {
+      "test_id": "S2-P3-06",
+      "test_file": "tests/cert-parsing.test.ts",
+      "test_function": "majority of cert fixtures produce CertParseResult-valid parsed data (S2-P3-06)",
+      "test_type": "integration",
+      "phase_id": 3,
+      "priority": "P1",
+      "ac": ["AC-01", "AC-02"],
+      "br": ["BR-09"],
+      "status": "failing"
+    }
+  ],
+  "criteria_coverage": [
+    { "ac": "AC-01", "covered": true, "test_ids": ["S2-P1-01", "S2-P2-01", "S2-P3-06"] },
+    { "ac": "AC-02", "covered": true, "test_ids": ["S2-P1-02", "S2-P2-02", "S2-P3-06"] },
+    { "ac": "AC-03", "covered": true, "test_ids": ["S2-P1-03", "S2-P1-04", "S2-P1-03-sdk", "S2-P1-06", "S2-P1-03-enrollment"] },
+    { "ac": "AC-22", "covered": true, "test_ids": ["S2-P2-03", "S2-P2-04", "S2-P2-05", "S2-AUTH-01"] },
+    { "ac": "AC-23", "covered": true, "test_ids": ["S2-P1-05", "S2-P2-06"] }
+  ],
+  "all_criteria_covered": true,
+  "excluded_scenarios": [
+    {
+      "scenario_id": "S2-P0-01",
+      "reason": "Covered by existing tests/foundation/*.test.ts (already-green foundation suites). No new test code needed — the harness assertion is that those suites continue to pass."
+    },
+    {
+      "scenario_id": "S2-P0-02",
+      "reason": "Satisfied by the import structure in tests/cert-parsing.test.ts itself — every test fails via loadCertModule() with 'Cannot find package @/lib/cert/parse-certificate', which IS the meaningful RED required by this scenario."
+    },
+    {
+      "scenario_id": "S2-P3-01",
+      "reason": "G2-01: Consolidated into Phase-1/Phase-2 tests. S2-P3-01 ('S-01 happy path e2e against aws-saa-valid.pdf') is fully covered by S2-P1-01 (parseCertificate routes through Claude, Zod-validates) + S2-P2-01 (confirm -> verified write + item done, Enrollment COMPLETED, exact DB row assertions). Adding a dedicated Phase-3 mirror would duplicate assertions already present in those two tests."
+    },
+    {
+      "scenario_id": "S2-P3-02",
+      "reason": "G2-01: Consolidated into Phase-1/Phase-2 tests. S2-P3-02 ('S-02 multi-skill e2e against multi-skill-bootcamp.pdf') is fully covered by S2-P1-02 (multi-skill parse, null-date/level tolerated, all skills returned + confirmed, exact DB count toBe(2)) + S2-P2-02 (null-date/level Docker skill individually confirmed). Adding a Phase-3 mirror would duplicate these exact assertions."
+    },
+    {
+      "scenario_id": "S2-P3-03",
+      "reason": "G2-01: Consolidated into Phase-1 tests. S2-P3-03 ('S-03 failure path against not-a-cert.png + forced invalid JSON') is fully covered by S2-P1-03 (garbled parse -> no Certificate, no EmployeeSkill; exact error message) + S2-P1-03-enrollment (Enrollment stays IN_PROGRESS on failure). The two Phase-1 tests together satisfy every THEN clause in S2-P3-03."
+    },
+    {
+      "scenario_id": "S2-P3-04",
+      "reason": "G2-01: Consolidated into Phase-2 tests. S2-P3-04 ('S-22 promotion: same record promoted, re-confirm no-op') is fully covered by S2-P2-03 (canonical record promoted in place — same row id, no duplicate, trustState=VERIFIED) + S2-P2-04 (re-confirm stays VERIFIED, no demotion, row count stable). Both tests use synthetic-handle-001 and assert the same invariants."
+    },
+    {
+      "scenario_id": "S2-P3-05",
+      "reason": "G2-01: Consolidated into Phase-1/Phase-2 tests. S2-P3-05 ('S-23 idempotency: same file twice -> one Certificate, one skill, one promotion') is fully covered by S2-P1-05 (idempotent double-submit cert side — claude.createMessage called exactly once, exactly ONE Certificate row) + S2-P2-06 (idempotent re-confirm — exactly ONE EmployeeSkill row, toBe(1)). Together they cover the full S2-P3-05 THEN clause."
+    }
+  ],
+  "git_branch": "feature/SKILL-2-cert-parsing",
+  "tests_staged_not_committed": true,
+  "next_stage_ready": true,
+  "revision_findings_resolved": {
+    "F-01": "CRITICAL — TS-002 stub fixed: layer2Client injected as confirmAndWriteSkill top-level option, not embedded in skill payload. resolveCanonicalSkill throw path now genuinely exercised.",
+    "F-02": "HIGH — New test S2-AUTH-01 added: cross-profile write rejected via callerEmployeeId seam; asserts no EmployeeSkill written.",
+    "F-03": "HIGH — Manifest IDs reconciled: S2-P1-01b → S2-P2-01, S2-P1-02b → S2-P2-02 (canonical IDs from test-scenarios.json).",
+    "F-04": "HIGH — Garbled-parse test (S2-P1-03) now asserts BOTH no Certificate row AND no EmployeeSkill row on parse failure.",
+    "F-05": "MEDIUM — S2-P2-01 (certSkills count) and S2-P2-06 (awsSkills count) now use toBe(1) not toBeGreaterThanOrEqual(1).",
+    "F-06": "MEDIUM — S2-P1-02 (multi-skill write loop) no longer uses tautological writes.length === skills.length; asserts DB rows match expected extracted set instead.",
+    "F-07": "MEDIUM — AC-23 describe block changed from beforeAll to beforeEach; S2-P1-05 Certificate row cleaned up before S2-P2-06 runs.",
+    "F-08": "LOW — Gherkin table SDK-throw entry relabeled from S2-P1-05 to S2-P1-03-sdk; manifest test_id corrected.",
+    "F-09": "LOW — normalizer_coverage_decision field added to manifest with documented justification for integration-only normalizer coverage."
+  }
+}

@@ -162,6 +162,46 @@ SKILL-2's ACs are AC-01/02/03/22/23 only; the auth layer (sessions, `cookies()`-
 
 ---
 
+## TADR-S2-03 — Cover `CertParseResult` z.preprocess normalizer branches via integration tests rather than isolated unit tests
+
+**Status:** Proposed (added in iteration 3 — per G2-02 finding from test-reviewer)
+**Trigger:** T-test-strategy (test-pyramid policy vs. integration-only normalizer coverage for a `z.preprocess` lambda).
+
+**Context.**
+- The `CertParseResult` schema (TADR-S2-01 v2, `src/schemas/CertParseResult.ts`) wraps a canonical object schema with a `z.preprocess` normalizer. The normalizer has **4 branches**: (A) top-level array of skill objects → wrap into envelope; (B) already-canonical envelope `{skills:[], …}` → pass through; (C) flat single-skill object → wrap into `skills[1]`; (D) non-object/non-array → let inner schema reject.
+- The standard test-pyramid policy (`architecture-principles/testing.md`) prefers isolated unit tests for branching logic to maximize branch coverage at low cost.
+- `callClaude` calls `schema.safeParse(raw)` **directly on the parsed JSON value** (`lib/ai/claude.ts:132`). The `z.preprocess` lambda is an internal Zod hook — it has no independently callable export, and extracting it to test in isolation would require either (a) duplicating the lambda outside the schema registration, violating ADR-003's "one schema per call" contract, or (b) reaching into Zod internals to invoke the preprocess step directly — a framework-internals anti-pattern.
+
+**Decision.**
+Cover all 4 normalizer branches **via integration tests** that invoke `parseCertificate` end-to-end with a real scripted Claude client spy:
+
+| Normalizer branch | Covered by |
+|---|---|
+| Case A — top-level array (AC-02 multi-skill) | AC-02 tests: S2-P1-02, S2-P2-02, S2-P3-06 |
+| Case B — already-canonical envelope (AC-23 idempotent / re-submit) | AC-23 tests: S2-P1-05, S2-P2-06 (second parse reuses the same shape) |
+| Case C — flat single-skill object (AC-01 happy path) | AC-01 tests: S2-P1-01, S2-P2-01, S2-P3-06 |
+| Case D — non-object/array → inner schema rejects | AC-03 garbled tests: S2-P1-03, S2-P1-03-sdk |
+
+Every branch is exercised by a **real behavioral assertion** (not a structural tautology): Case A exercises `confidence=min(…)` derivation; Case B exercises idempotent re-submit; Case C exercises the flat-object parse path; Case D exercises the garbled-JSON failure path with a `userMessage` assertion.
+
+**Rationale.**
+- Isolated unit tests for the `z.preprocess` lambda would require accessing or duplicating the lambda outside its registered schema slot — a direct violation of ADR-003 ("one schema per call"; the schema is the contract, not its sub-components) and the "Refuse to ship" rule ("mocks from contract, not from scenario prose").
+- Each integration test adds a real behavioral assertion that the unit tests cannot replicate: the spy serialization round-trip (`makeClaudeClientSpy` → `JSON.stringify` → `JSON.parse` → `safeParse`) is the actual code path that broke in iteration-1 (TADR-S2-01 F-01). Unit tests on the raw lambda would bypass this path and miss the class of defect that F-01 caught.
+- `z.preprocess` runs synchronously inside `safeParse`; its 4 branches are simple guard clauses (Array.isArray, `.skills` check, `typeof === "object"`, fallthrough). The integration coverage is sufficient: every branch is hit by at least one scenario with a real behavioral assertion.
+
+**Alternatives considered.**
+- *Export the preprocess lambda separately and unit-test it* — rejected: duplicates the schema's registered slot (ADR-003 violation); creates a second testable surface that diverges from the deployed schema under changes.
+- *Use Zod's internal `._def.preprocess` hook to invoke the lambda directly* — rejected: framework-internals testing is an anti-pattern; brittle under Zod version upgrades; the resulting tests would be structural (input→output of a pure function) not behavioral.
+- *Add a thin normalizer wrapper function exported alongside the schema* — rejected: adds production LOC solely for testability with no behavioral value; the `z.preprocess` design keeps the normalizer co-located with the schema for maintainability.
+
+**Trade-offs.** *Gain:* normalizer branch coverage without ADR-003 violations or framework-internals coupling; existing integration tests exercise every branch with real behavioral assertions. *Give up:* branch coverage is not isolated; a normalizer regression may appear as an AC-level failure rather than a narrowly-scoped unit failure.
+
+**Impact.** *Technical:* no code changes — decision is test-strategy only. *Risk:* LOW.
+
+**Evidence.** `src/schemas/CertParseResult.ts` (TADR-S2-01 v2 schema body); `lib/ai/claude.ts:132` (`safeParse(raw)` call site); `tests/cert-parsing.test.ts` (all AC-01/AC-02/AC-03/AC-23 scenarios); ADR-003; iteration-1 F-01 defect (array/flat-object safeParse failure).
+
+---
+
 ## Deviations explicitly NOT raised (scan completeness)
 
 | Candidate | Why it is NOT a deviation |

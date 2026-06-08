@@ -1,0 +1,28 @@
+{
+  "jira_id": "SKILL-2",
+  "workflow_stage": "test-creation",
+  "context": {
+    "initiative_name": "skillsync-vertex-hackathon",
+    "local_only": true,
+    "code_repo_path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+    "code_branch": "feature/SKILL-2-cert-parsing",
+    "test_framework": "vitest",
+    "test_dir": "tests/",
+    "fixtures_dir": "fixtures/certs/",
+    "initiative_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/02-acceptance-tests/"
+    ],
+    "previous_artifacts": [
+      "artifacts/06-planning/implementation-plan.md",
+      "artifacts/06-planning/test-scenarios.json",
+      "artifacts/06-planning/tactical-adrs.md"
+    ],
+    "coverage_targets": {
+      "overall": 40,
+      "new_code": 45,
+      "branch": 40,
+      "critical_paths": 75,
+      "_note": "Hackathon-relaxed targets per run setup (default 80/90/85/95 overridden)."
+    }
+  }
+}
