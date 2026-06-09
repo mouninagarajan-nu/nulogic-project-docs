@@ -1,0 +1,23 @@
+{
+  "status": "success",
+  "quality_gates_passed": true,
+  "jira_id": "SKILL-3",
+  "green_commit": "dcd9207",
+  "infra_commit": "8c643cf",
+  "coverage_targets": {"overall": 40, "new": 45, "branch": 40, "critical_paths": 75},
+  "sub_agents": {
+    "security": {"status": "pass", "critical_findings": 0, "high_findings": 0, "medium_findings": 2, "low_findings": 2, "notes": "SEC-S3-001 hardcoded MANAGER session (TODO SKILL-6 auth); SEC-S3-002 prompt-injection on free-text query (bounded: read-only, role-scoped pre-call, Zod-constrained output). No secrets, no PII leak, authz correct."},
+    "test": {"status": "pass", "tests": "58/58", "coverage": {"statements": "89.17%", "branch": "70.41%", "functions": "86.76%", "lines": "92.01%"}, "acs_validated": ["AC-04", "AC-05", "AC-06", "AC-11", "AC-21"]},
+    "performance": {"status": "pass", "hard_failures": 0, "warnings": ["SA-006 unbounded findMany (no take cap) for MANAGER/ADMIN scope — benign at demo scale", "SA-007 missing @@index on Employee.leadId"], "notes": "Read-only; single DB query + single Opus call; cache breakpoint correct. p95 not measurable (NO_LIVE_CLIENT stub)."},
+    "sre": {"status": "pass", "monitoring_configured": true, "notes": "Call-boundary logging present and PII/secret-safe; AC-06 failure path logged + graceful. Prod dashboards/alerts/runbooks deferred to productionization (no deploy target, hackathon)."},
+    "local_integration": {"status": "pass", "smoke_tests_passed": "5/5", "human_gate": "skipped", "notes": "Server starts; POST /api/match returns the AC-06 typed failure (HTTP 503 + retry message, no results) under the NO_LIVE_CLIENT stub — correct behavior. Required next.config.ts Prisma/Turbopack externalization (committed 8c643cf)."}
+  },
+  "failed_gates": [],
+  "deferred_tech_debt": [
+    "SEC-S3-001 / auth seam — real session+role enforcement lands in SKILL-6",
+    "SEC-S3-002 — prompt-injection hardening (treat query as untrusted, length/control-char cap)",
+    "SA-006 — add take cap + deterministic sort to buildMatchDataset org scope",
+    "SA-007 — add @@index([leadId]) to Employee",
+    "route try/catch so datastore failures also map to the AC-06 graceful 503"
+  ]
+}

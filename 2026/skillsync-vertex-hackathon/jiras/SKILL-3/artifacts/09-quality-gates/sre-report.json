@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "agent": "nulogic-sre-monitor-checker",
+    "jira_id": "SKILL-3",
+    "validation_phase": "pipeline",
+    "context": "LOCAL-ONLY hackathon demo — proportional assessment applied",
+    "date": "2026-06-09",
+    "branding": "NULogic"
+  },
+  "gate_result": "PASS",
+  "summary": "Call-boundary observability is present, PII-safe, and correct. Failure paths log and return gracefully. Production monitoring infra (dashboards, alert rules, runbooks) is not present and is correctly deferred — not a blocker for a hackathon demo.",
+  "findings": [
+    {
+      "id": "SRE-01",
+      "severity": "PASS",
+      "category": "call_boundary_logging",
+      "title": "callClaude logs every outcome at the single AI boundary",
+      "detail": "lib/ai/claude.ts implements a `log()` function called at every exit path of callClaude: sdk-throw (reason:sdk), extract failure (reason:extract), parse/Zod failure (reason:parse), confidence below threshold (reason:confidence), and success (ok:true). Each log entry carries requestId, promptName, model, ok, and optional reason. No raw model text, no PII, no secrets are logged — the comment in claude.ts:92 explicitly states 'Observability only — never logs raw model text or PII.' Log output is via console.debug('[claude]', JSON.stringify(entry)).",
+      "file": "lib/ai/claude.ts",
+      "lines": "85-94, 122-123, 128-130, 134-135, 142-144, 147-148"
+    },
+    {
+      "id": "SRE-02",
+      "severity": "PASS",
+      "category": "failure_path_handling",
+      "title": "AC-06 graceful failure path is logged and returns exact retry message",
+      "detail": "On any Claude call failure (sdk throw, malformed JSON, Zod parse failure), callClaude logs the failure reason and returns a typed Failure. runStaffingSearch maps any Failure to the exact AC-06 string 'Search is temporarily unavailable — please retry.' and returns ok:false with no partial ranking. The route handler maps that to HTTP 503 with the userMessage. The failure path is confirmed green by tests S3-P3-04 (sdk throw) and S3-P3-05 (garbled JSON).",
+      "file": "lib/match/run-staffing-search.ts, app/api/match/route.ts",
+      "lines": "run-staffing-search.ts:103-104, route.ts:54-55"
+    },
+    {
+      "id": "SRE-03",
+      "severity": "PASS",
+      "category": "pii_log_safety",
+      "title": "No PII logged at any level — LOG_PII_RISK not triggered",
+      "detail": "The log() function in claude.ts emits only requestId (synthetic req-{ts}-{rand}), promptName (enum), model (string), ok (bool), reason (enum). lib/match/dataset.ts explicitly drops handle and currentProject from the dataset projection — those fields are not serialized into the system context sent to Claude and not logged. The serialized dataset contains only profileId, seniority, timezone, allocation, freeFrom, and skills[{name, trustState}] — all synthetic/non-PII per SKILL-3 design. No console.log/warn/error calls exist in lib/match/* files.",
+      "file": "lib/ai/claude.ts, lib/match/dataset.ts",
+      "lines": "claude.ts:85-94; dataset.ts:41-49 (rowToRecord drops handle/currentProject)"
+    },
+    {
+      "id": "SRE-04",
+      "severity": "PASS",
+      "category": "secret_safety",
+      "title": "No secrets or API keys logged or hardcoded",
+      "detail": "ANTHROPIC_API_KEY is read only via process.env and never referenced in any log statement. Model IDs are resolved via process.env.CLAUDE_MODEL_HARD / CLAUDE_MODEL_ROUTINE with safe fallbacks (lib/ai/route.ts). The live client is a deferred TODO stub — no real SDK call is wired yet, eliminating the risk of logging raw API responses in the current demo state.",
+      "file": "lib/ai/route.ts, lib/ai/claude.ts"
+    },
+    {
+      "id": "SRE-05",
+      "severity": "PASS",
+      "category": "request_diagnosability",
+      "title": "Requests are traceable from entry to outcome via requestId",
+      "detail": "Each callClaude invocation generates a unique requestId (req-{timestamp}-{random}). This ID is present in every log entry and is returned in both Ok and Failure result shapes (claude.ts:59-66). The route handler delegates to runStaffingSearch which delegates to callClaude — a single call per search (asserted by S3-P3-01/S3-P3-06). An engineer can correlate a failing search to the exact callClaude log line. The route handler logs implicitly via the callClaude boundary; the thin transport itself has no additional logging, which is acceptable for a read-only pass-through handler.",
+      "file": "lib/ai/claude.ts",
+      "lines": "68-70 (newRequestId), 59-66 (result shapes)"
+    },
+    {
+      "id": "SRE-06",
+      "severity": "WARN",
+      "category": "request_entry_logging",
+      "title": "No explicit request-entry log at the route handler boundary",
+      "detail": "POST /api/match does not log on request receipt (e.g. query text, role, timestamp). The only observability is the callClaude boundary log emitted mid-flight. For production this would be INSUFFICIENT_LOGGING but for a hackathon demo where the call-boundary log is the primary observability NFR this is acceptable. Deferred to productionization.",
+      "resolution": "DEFERRED — add request-entry structured log (queryText length, role, requestId) before the dataset build when productionizing.",
+      "file": "app/api/match/route.ts"
+    },
+    {
+      "id": "SRE-07",
+      "severity": "INFO",
+      "category": "production_monitoring_config",
+      "title": "No prometheus.yml / alerts.yml / dashboard.json — deferred for hackathon",
+      "detail": "No Prometheus config, alert rules, Grafana dashboards, or Application Insights configuration files are present in the repo. This is expected and correct for a local-only hackathon demo with no production deploy target. Stage 12 (production deployment) is explicitly N/A per run context.",
+      "resolution": "DEFERRED — configure RED metrics, dashboards, and alert rules as part of productionization before any production/pre-prod environment deployment."
+    },
+    {
+      "id": "SRE-08",
+      "severity": "INFO",
+      "category": "runbooks",
+      "title": "No operational runbooks — deferred for hackathon",
+      "detail": "No runbooks/*.md files exist. For a read-only demo endpoint with a single Claude call boundary, runbooks are not meaningful until alert rules and on-call rotation exist. The AC-06 retry message is effectively the user-facing runbook for the one known failure mode (Claude unavailability).",
+      "resolution": "DEFERRED — author runbooks for each alert when alert rules are defined at productionization."
+    },
+    {
+      "id": "SRE-09",
+      "severity": "INFO",
+      "category": "tracing",
+      "title": "No distributed tracing (OpenTelemetry / Application Insights) — deferred",
+      "detail": "No OpenTelemetry instrumentation or Application Insights SDK integration is present. The requestId in callClaude provides lightweight correlation within a single process but is not propagated as a W3C trace context header. Acceptable for a hackathon demo.",
+      "resolution": "DEFERRED — integrate OpenTelemetry SDK and propagate trace context headers when productionizing."
+    }
+  ],
+  "gate_checks": {
+    "call_boundary_logging_present": true,
+    "failure_path_logged_and_handled": true,
+    "pii_in_logs": false,
+    "secrets_in_logs": false,
+    "log_pii_risk": false,
+    "dashboard_config_exists": false,
+    "alert_rules_exist": false,
+    "runbooks_exist": false,
+    "production_monitoring_required_for_demo": false
+  },
+  "proportionality_note": "Gate criteria applied proportionally per run context: missing call-boundary logging = FAIL (not the case here); absence of production dashboards/alerts/runbooks = INFO/DEFERRED, not a demo-blocking FAIL. The observability the SKILL-3 design calls for (call-boundary logging incl. cache-hit path, no PII/secret in logs, graceful failure logging) is present and correct.",
+  "blocking_issues": [],
+  "warnings": [
+    "SRE-06: No request-entry log in the route handler (deferred to productionization)"
+  ],
+  "deferred_to_productionization": [
+    "SRE-07: Prometheus / Azure Monitor metrics config (RED metrics)",
+    "SRE-08: Runbooks for each alert",
+    "SRE-09: OpenTelemetry distributed tracing"
+  ]
+}

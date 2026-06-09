@@ -1,0 +1,58 @@
+$ vitest run
+
+ RUN  v4.1.8 C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync
+
+
+ Test Files  6 passed (6)
+      Tests  58 passed (58)
+   Start at  09:07:37
+   Duration  27.28s (transform 408ms, setup 100ms, import 587ms, tests 2.77s, environment 1ms)
+
+
+ RUN  v4.1.8 C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync
+      Coverage enabled with v8
+
+
+ Test Files  6 passed (6)
+      Tests  58 passed (58)
+   Start at  09:08:28
+   Duration  28.62s (transform 536ms, setup 252ms, import 848ms, tests 5.56s, environment 1ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   89.17 |    70.41 |   86.76 |   92.01 |                   
+ lib/ai            |   88.37 |    86.36 |   77.77 |   90.24 |                   
+  claude.ts        |   86.48 |    81.25 |   71.42 |   88.57 | 102-104,134-135   
+ lib/cert          |   71.79 |    68.18 |      75 |   75.67 |                   
+  ...ertificate.ts |   70.27 |       65 |      75 |   74.28 | 108-112,169-183   
+ lib/dev           |   91.11 |    81.25 |     100 |    92.5 |                   
+  guardrails.ts    |   91.11 |    81.25 |     100 |    92.5 | 74,99,118         
+ lib/domain        |     100 |    66.66 |     100 |     100 |                   
+  trust-state.ts   |     100 |    66.66 |     100 |     100 | 35-60             
+ lib/match         |   96.87 |       72 |    92.3 |   96.55 |                   
+  dataset.ts       |   93.33 |     62.5 |    87.5 |    92.3 | 48                
+  ...ing-search.ts |     100 |    76.47 |     100 |     100 | 53,57-68          
+ lib/repos         |   84.44 |    64.28 |     100 |    87.8 |                   
+  db.ts            |     100 |    66.66 |     100 |     100 | 20,28             
+  skill.ts         |   82.05 |    63.63 |     100 |   85.71 | 91-94,109-111     
+ src/prompts       |   73.68 |    27.77 |   44.44 |     100 |                   
+  ...log-dedupe.ts |      50 |        0 |       0 |     100 | 8                 
+  ...log-enrich.ts |      50 |        0 |       0 |     100 | 8                 
+  ...h-staffing.ts |     100 |       50 |     100 |     100 | 14                
+  parse-resume.ts  |      50 |        0 |       0 |     100 | 8                 
+  ...mend-items.ts |      50 |        0 |       0 |     100 | 8                 
+  ...l-identity.ts |     100 |       50 |     100 |     100 | 8-9               
+  ...e-progress.ts |      50 |        0 |       0 |     100 | 8                 
+ src/schemas       |      96 |    83.87 |     100 |      96 |                   
+  ...arseResult.ts |   92.85 |    80.95 |     100 |   92.85 | 46                
+  MatchResult.ts   |     100 |       90 |     100 |     100 | 25                
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 89.17% ( 280/314 )
+Branches     : 70.41% ( 119/169 )
+Functions    : 86.76% ( 59/68 )
+Lines        : 92.01% ( 265/288 )
+================================================================================

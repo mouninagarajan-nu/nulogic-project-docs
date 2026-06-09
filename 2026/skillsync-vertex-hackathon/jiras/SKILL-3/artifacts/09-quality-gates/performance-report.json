@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "jira_id": "SKILL-3",
+    "agent": "nulogic-performance-validator",
+    "tier": "tier-1-pipeline",
+    "generated_at": "2026-06-09",
+    "branding": "NULogic",
+    "validation_mode": "static-only — no live client (NO_LIVE_CLIENT stub); runtime latency not measurable in this run"
+  },
+
+  "validation_status": "WARNINGS",
+
+  "slo_targets": {
+    "p95_route_excl_model_ms": 200,
+    "max_regression_pct": 20,
+    "source": "pre-set by orchestrator (task brief)"
+  },
+
+  "gates_status": {
+    "performance_tests_required": {
+      "result": "NOT_APPLICABLE",
+      "detail": "test-manifest.json sets performance_tests_required=false. Rationale: route is read-only, single Claude call, latency dominated by model (Opus); prompt-caching + UI loading state defer throughput concern to SKILL-6. Accepted per agent rules (hackathon demo with stubbed live client — WARN/INFO, not FAIL)."
+    },
+    "scenario_coverage": {
+      "result": "NOT_APPLICABLE",
+      "detail": "No performance test files required or present. No coverage gap to score."
+    },
+    "syntax_validation": {
+      "result": "NOT_APPLICABLE",
+      "detail": "No performance test files to parse."
+    },
+    "slo_documented": {
+      "result": "WARN",
+      "detail": "SLOs supplied externally by the orchestrator (p95 < 200ms excl. model, max 20% regression). Not embedded in a test file, slo.yaml, or code annotation within the repo. Acceptable for a hackathon story with a justified perf_tests_required=false ruling, but a slo.yaml or inline @slo annotation would make this self-documenting.",
+      "recommendation": "Add a slo.yaml or @slo JSDoc annotation to lib/match/run-staffing-search.ts before SKILL-6 productionisation."
+    },
+    "static_analysis": {
+      "result": "WARNINGS",
+      "findings": [
+        {
+          "id": "SA-001",
+          "pattern": "N_PLUS_ONE",
+          "severity": "high",
+          "status": "PASS — not present",
+          "file": "lib/match/dataset.ts",
+          "detail": "buildMatchDataset issues a single prisma.employee.findMany with a nested select { skills: { select: { trustState, skill: { name } } } }. Prisma batches the relation load — no per-profile query loop. No N+1."
+        },
+        {
+          "id": "SA-002",
+          "pattern": "ATOMICITY_VIOLATION",
+          "severity": "critical",
+          "status": "PASS — not present",
+          "file": "app/api/match/route.ts, lib/match/dataset.ts, lib/match/run-staffing-search.ts",
+          "detail": "Route is strictly read-only (no DB writes anywhere in the SKILL-3 surface). No read-then-write pattern exists. No atomicity violation."
+        },
+        {
+          "id": "SA-003",
+          "pattern": "UNBATCHED_CALLS",
+          "severity": "medium",
+          "status": "PASS — not present",
+          "detail": "Only one external call per path: one prisma.employee.findMany in buildMatchDataset, one callClaude in runStaffingSearch. Never more than one sequential call to the same dependency in a single method."
+        },
+        {
+          "id": "SA-004",
+          "pattern": "NO_JITTER",
+          "severity": "medium",
+          "status": "NOT_APPLICABLE",
+          "detail": "No cache TTL or expiry is set in any SKILL-3 file. Prompt-cache lifetime is managed entirely by Anthropic's infrastructure. No jitter concern."
+        },
+        {
+          "id": "SA-005",
+          "pattern": "UNNECESSARY_READ",
+          "severity": "medium",
+          "status": "PASS — not present",
+          "detail": "No write operations exist; there is no read-after-write pattern anywhere in the route."
+        },
+        {
+          "id": "SA-006",
+          "pattern": "UNBOUNDED_QUERY",
+          "severity": "medium",
+          "status": "WARN",
+          "file": "lib/match/dataset.ts:71",
+          "detail": "prisma.employee.findMany for MANAGER/ADMIN scope has no `take` limit. At ~25 synthetic profiles (demo scale) this is benign and within the p95 SLO. At org scale (thousands of employees) this would: (a) blow the Anthropic context window for the serialized dataset, and (b) increase serialization and prompt-cache assembly time beyond the 200ms SLO. Acceptable for SKILL-3 hackathon scope but must be addressed before production.",
+          "recommendation": "Add a configurable `take` cap (e.g. 200 profiles) with a deterministic sort before the findMany, and document the window-size constraint in a TODO comment."
+        },
+        {
+          "id": "SA-007",
+          "pattern": "MISSING_INDEX",
+          "severity": "medium",
+          "status": "WARN",
+          "file": "prisma/schema.prisma — Employee model",
+          "detail": "The PRACTICE_LEAD scope filters on `where: { leadId: session.employeeId }` (dataset.ts:67). The Employee.leadId field has no @@index in the schema. For SQLite with 25 rows this is a full-table scan but sub-millisecond. At scale (hundreds of employees per practice), lack of index on leadId degrades the scoped dataset fetch. Acceptable at current demo scale.",
+          "recommendation": "Add @@index([leadId]) to the Employee model before scaling beyond demo data."
+        }
+      ],
+      "critical_findings_count": 0,
+      "high_findings_count": 0,
+      "medium_warn_count": 2,
+      "hard_gate_escalation": false
+    }
+  },
+
+  "prompt_cache_validation": {
+    "result": "PASS",
+    "breakpoint_correct": true,
+    "detail": "RANKING_RULES_PROMPT + serialized dataset are concatenated as `cacheableContext` and passed as the `system` argument to callClaude (run-staffing-search.ts:90-98). The per-request query is rendered only into the user turn via matchStaffingPrompt (match-staffing.ts). This is the correct cache breakpoint: the large, stable system block is cacheable across queries; the small volatile user turn is not. Confirmed by test S3-P1-02 and S3-P3-06.",
+    "single_claude_call_per_search": true,
+    "confirmed_by_tests": ["S3-P1-02", "S3-P3-06"]
+  },
+
+  "slo_static_assessment": {
+    "p95_excl_model": {
+      "target_ms": 200,
+      "assessment": "LIKELY_PASS at demo scale",
+      "detail": "Non-Claude route work per request: (1) JSON.parse of request body — O(1); (2) buildMatchDataset — one prisma.employee.findMany + in-process row mapping, O(n) with n~25; (3) serializeDataset — in-memory Array.sort + JSON.stringify, O(n log n) with n~25; (4) result mapping + Response.json — O(k) where k = shortlist size. All operations are in-process or single-round-trip DB. At n=25 the total non-model path is estimated well under 20ms, leaving an 180ms margin against the 200ms SLO. No measurable runtime evidence available (NO_LIVE_CLIENT stub).",
+      "measurability": "NOT_MEASURABLE — NO_LIVE_CLIENT active; actual latency deferred to Tier-2 smoke / Tier-3 perf environment"
+    },
+    "regression": {
+      "target_max_pct": 20,
+      "assessment": "NOT_MEASURABLE — no baseline exists (first implementation)",
+      "detail": "No prior run to compare against. Regression gate is vacuously satisfied for the first delivery but must be established in Tier-3 as the baseline for SKILL-4 and later."
+    }
+  },
+
+  "missing_benchmarks_note": "WARN/INFO (not FAIL): No runtime benchmark exists because the live Claude client is intentionally stubbed (NO_LIVE_CLIENT). This is the correct design for a hackathon pipeline run. Benchmarks are deferred to Tier-2 (functional smoke with 1 iteration) and Tier-3 (SLO validation in pre-prod) when a live client is wired in SKILL-6.",
+
+  "deployment_validation_required": [
+    {
+      "tier": "tier-2-functional-smoke",
+      "environment": "dev/qa/integration",
+      "prerequisite": "Live Claude client injected (SKILL-6 TODO)",
+      "tests": [
+        {
+          "description": "POST /api/match — single search request, verify route executes without error and returns a valid shortlist JSON",
+          "command": "curl -s -X POST http://localhost:3000/api/match -H 'Content-Type: application/json' -d '{\"queryText\":\"senior cloud engineer free in 2 weeks\"}' | jq .",
+          "purpose": "Verify route reaches Claude, receives a response, Zod validates, and returns HTTP 200 with shortlist. Confirms test is not broken before perf env.",
+          "failure_action": "Fix Claude client wiring before Tier-3 execution"
+        }
+      ]
+    },
+    {
+      "tier": "tier-3-slo-validation",
+      "environment": "pre-prod/perf",
+      "prerequisite": "Live Claude client + production-like infrastructure + prompt-cache warm",
+      "tests": [
+        {
+          "description": "Load test: POST /api/match — measure p95 latency of non-Claude route work",
+          "suggested_tool": "k6",
+          "suggested_command": "k6 run --vus 10 --duration 2m --out json=results.json match-staffing.k6.js",
+          "slo_thresholds": {
+            "p95_excl_model_ms": 200,
+            "error_rate_max_pct": 1
+          },
+          "measurement_note": "Instrument Application Insights / Azure Monitor to separate route latency from Claude API latency. Validate p95(route_duration_excl_model) < 200ms. Establish baseline for SKILL-4 regression check (max 20% degradation).",
+          "purpose": "Validate SLO compliance with production-like infrastructure and a warm prompt cache.",
+          "failure_action": "Block production deployment; investigate unbounded query or serialization cost at scale"
+        }
+      ]
+    }
+  ],
+
+  "summary": {
+    "hard_gate_failures": 0,
+    "soft_gate_warnings": 3,
+    "warnings": [
+      "SA-006: Unbounded findMany for MANAGER/ADMIN scope — no `take` limit (benign at n=25, risk at scale)",
+      "SA-007: Missing @@index([leadId]) on Employee — full-table scan for PRACTICE_LEAD scope (benign at demo scale)",
+      "slo_documented: SLO targets not embedded in repo artifacts — supplied externally by orchestrator only"
+    ],
+    "blocking": false,
+    "recommendation": "PASS for PR creation. Address SA-006 (take limit) and SA-007 (leadId index) as tracked tech-debt before SKILL-6 productionisation. Wire live Claude client in SKILL-6 and establish Tier-2 smoke + Tier-3 baseline at that point."
+  }
+}

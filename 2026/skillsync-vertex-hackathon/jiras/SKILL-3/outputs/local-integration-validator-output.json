@@ -1,0 +1,97 @@
+{
+  "jira_id": "SKILL-3",
+  "agent_id": "nulogic-local-integration-validator",
+  "status": "passed",
+  "artifacts_created": [
+    "artifacts/09-quality-gates/local-integration-report.md"
+  ],
+  "summary": "Service started on port 3000 in 2.1 s. 5/5 smoke tests passed. AC-06 failure path verified: POST /api/match returns HTTP 503 with the exact retry message and no partial ranking, confirming the NO_LIVE_CLIENT stub behaves correctly. Two pre-start remediation steps were required: (1) pnpm db:generate to refresh the Prisma v7 client, (2) pnpm db:push to add the missing Employee.seniority column to dev.db. next.config.ts was updated with serverExternalPackages to externalize Prisma from Turbopack bundling. Human gate skipped per skip_human_gate=true (hackathon run). Gate: PASS.",
+  "validation_statistics": {
+    "service_started": true,
+    "health_check_passed": true,
+    "startup_time_seconds": 2.1,
+    "smoke_tests_total": 5,
+    "smoke_tests_passed": 5,
+    "smoke_tests_failed": 0,
+    "human_gate_result": "skipped",
+    "human_gate_notes": "skip_human_gate=true — hackathon run. No match UI exists yet (deferred to SKILL-6); endpoint testing is the correct scope for SKILL-3.",
+    "gate_passed": true
+  },
+  "next_stage_ready": true,
+  "built_from": "dcd9207",
+  "metadata": {
+    "service_url": "http://localhost:3000",
+    "target_repo": "ai-nu-skillsync",
+    "target_branch": "feature/SKILL-3-staffing-matcher",
+    "config_profile": "dev",
+    "port": 3000,
+    "start_command": "pnpm dev",
+    "health_endpoint": "GET /",
+    "pre_start_actions": [
+      "pnpm db:generate — refreshed Prisma v7 generated client (lib/generated/prisma/)",
+      "pnpm db:push — synced Employee.seniority + other missing columns to dev.db",
+      "next.config.ts updated: added serverExternalPackages for @prisma/client, @prisma/adapter-better-sqlite3, better-sqlite3"
+    ],
+    "smoke_test_detail": [
+      {
+        "name": "Root health check",
+        "method": "GET",
+        "endpoint": "/",
+        "expected_status": 200,
+        "actual_status": 200,
+        "response_time_ms": 252,
+        "result": "pass"
+      },
+      {
+        "name": "AC-06 failure path — valid manager query",
+        "method": "POST",
+        "endpoint": "/api/match",
+        "payload": {"queryText": "Find a senior React developer available within 2 weeks"},
+        "expected_status": 503,
+        "actual_status": 503,
+        "expected_body_contains": "Search is temporarily unavailable — please retry.",
+        "actual_body": "{\"userMessage\":\"Search is temporarily unavailable \\u2014 please retry.\"}",
+        "response_time_ms": 186,
+        "result": "pass",
+        "note": "Correct AC-06 behavior: NO_LIVE_CLIENT stub triggers typed failure; no partial ranking returned"
+      },
+      {
+        "name": "Blank query rejected",
+        "method": "POST",
+        "endpoint": "/api/match",
+        "payload": {"queryText": "  "},
+        "expected_status": 400,
+        "actual_status": 400,
+        "expected_body_contains": "A staffing query is required.",
+        "actual_body": "{\"error\":\"A staffing query is required.\"}",
+        "response_time_ms": 208,
+        "result": "pass"
+      },
+      {
+        "name": "Invalid JSON rejected",
+        "method": "POST",
+        "endpoint": "/api/match",
+        "payload": "not-json",
+        "expected_status": 400,
+        "actual_status": 400,
+        "expected_body_contains": "Invalid request body.",
+        "actual_body": "{\"error\":\"Invalid request body.\"}",
+        "response_time_ms": 128,
+        "result": "pass"
+      },
+      {
+        "name": "AC-06 failure path — second query variant",
+        "method": "POST",
+        "endpoint": "/api/match",
+        "payload": {"queryText": "Need a Python ML engineer free immediately"},
+        "expected_status": 503,
+        "actual_status": 503,
+        "expected_body_contains": "Search is temporarily unavailable — please retry.",
+        "actual_body": "{\"userMessage\":\"Search is temporarily unavailable \\u2014 please retry.\"}",
+        "response_time_ms": 237,
+        "result": "pass"
+      }
+    ],
+    "completed_at": "2026-06-09T03:40:00Z"
+  }
+}

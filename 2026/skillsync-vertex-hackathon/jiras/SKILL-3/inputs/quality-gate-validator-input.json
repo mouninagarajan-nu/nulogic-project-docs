@@ -1,0 +1,21 @@
+{
+  "jira_id": "SKILL-3",
+  "workflow_stage": "quality-validation",
+  "local_only": true,
+  "context": {
+    "previous_artifacts": [
+      "artifacts/08-implementation/",
+      "artifacts/07-tests/"
+    ],
+    "code_repository": {
+      "name": "ai-nu-skillsync",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+      "branch": "feature/SKILL-3-staffing-matcher",
+      "green_commit": "dcd9207"
+    },
+    "coverage_targets": {"overall": 40, "new": 45, "branch": 40, "critical_paths": 75},
+    "performance_slos": {"p95_ms": 200, "max_regression_pct": 20, "note": "matcher route is read-only (no DB writes); the Claude call dominates latency and is mitigated by prompt caching + a UI loading state. No live Claude client in this run (route returns NO_LIVE_CLIENT), so end-to-end latency is not measurable here."},
+    "hackathon_context": "Greenfield Next.js 16 demo app for the NULogic AI Hackathon. No production deploy target (Stage 12 N/A). Observability = call-boundary logging in lib/ai. No production monitoring/alerting/runbook infrastructure is expected for a hackathon demo; assess SRE proportionally (call-boundary logging present = adequate; absence of prod dashboards/alerts is INFO/WARN, not a hard demo blocker).",
+    "skip_human_gate": true
+  }
+}
