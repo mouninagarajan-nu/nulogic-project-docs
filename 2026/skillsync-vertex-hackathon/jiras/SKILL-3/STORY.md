@@ -17,8 +17,8 @@
 | **Gaps Closed** | TD-MATCH-01, TD-DATA-04 (matcher reads seniority/timezone) |
 | **Owner** | mouni.nagarajan@nulogic.io |
 | **Started At** | 2026-06-08T00:00:00Z |
-| **Status** | In Review |
-| **Pipeline Stage** | 11-pr |
+| **Status** | In Review — pipeline complete (Stages 5–12); awaiting PR #4 merge |
+| **Pipeline Stage** | 12-deployment (N/A — no deploy target) |
 | **PR Link** | https://github.com/NUTechnolgyInc/ai-nu-skillsync/pull/4 |
 | **Branch** | feature/SKILL-3-staffing-matcher |
 

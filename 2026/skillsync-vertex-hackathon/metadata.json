@@ -25,7 +25,7 @@
   "jiras_created": [
     {"id": "SKILL-1", "title": "Foundation: synthetic data, trust-state persistence & the Claude intelligence boundary", "epic": "EPIC-1", "story_points": 8, "blocks": ["SKILL-2","SKILL-3","SKILL-4","SKILL-5","SKILL-6"], "blocked_by": [], "lifecycle_status": "Done", "completed_at": "2026-06-07T00:00:00Z"},
     {"id": "SKILL-2", "title": "Certificate parsing -> verified skills (the innovation hero)", "epic": "EPIC-1", "story_points": 5, "blocks": ["SKILL-4"], "blocked_by": [], "blocked_by_resolved": ["SKILL-1"]},
-    {"id": "SKILL-3", "title": "Staffing Matcher: availability-aware ranked shortlist", "epic": "EPIC-1", "story_points": 5, "blocks": ["SKILL-4"], "blocked_by": [], "blocked_by_resolved": ["SKILL-1"]},
+    {"id": "SKILL-3", "title": "Staffing Matcher: availability-aware ranked shortlist", "epic": "EPIC-1", "story_points": 5, "blocks": ["SKILL-4"], "blocked_by": [], "blocked_by_resolved": ["SKILL-1"], "lifecycle_status": "In Review", "pipeline_complete": true, "pr_url": "https://github.com/NUTechnolgyInc/ai-nu-skillsync/pull/4", "stage_12": "N/A (no deploy target)"},
     {"id": "SKILL-4", "title": "The Hero Loop + Catalog Intelligence", "epic": "EPIC-1", "story_points": 8, "blocks": [], "blocked_by": ["SKILL-2","SKILL-3"], "blocked_by_resolved": ["SKILL-1"]},
     {"id": "SKILL-5", "title": "Profile Spine: baseline skills, self-service, manager approval & resume extraction", "epic": "EPIC-2", "story_points": 8, "blocks": ["SKILL-6"], "blocked_by": [], "blocked_by_resolved": ["SKILL-1"]},
     {"id": "SKILL-6", "title": "Auth, Roles, Progress Summary & NULogic UI", "epic": "EPIC-3", "story_points": 8, "blocks": [], "blocked_by": ["SKILL-5"], "blocked_by_resolved": ["SKILL-1"]}

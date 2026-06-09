@@ -7,7 +7,8 @@
   "t_shirt": "L",
   "priority": "Highest",
   "status": "In Review",
-  "lifecycle_status": "In Review",
+  "lifecycle_status": "In Review — per-Jira pipeline complete (Stages 5-12); awaiting PR #4 merge to main",
+  "pipeline_complete": true,
   "blocks": ["SKILL-4"],
   "blocked_by": [],
   "blocked_by_resolved": ["SKILL-1"],
@@ -43,7 +44,7 @@
     "9": {"status": "completed", "agent": "nulogic-quality-gate-validator", "result": "PASSED", "started_at": "2026-06-09T00:00:00Z", "completed_at": "2026-06-09T00:00:00Z", "gates": {"security": "pass", "test": "pass (58/58, 89% stmt)", "performance": "pass (2 warn)", "sre": "pass", "local_integration": "pass (5/5, human gate skipped)"}, "infra_commit": "8c643cf"},
     "10": {"status": "completed", "agent": "(built-in)", "result": "synced", "adr_sync_commit": "51244b1"},
     "11": {"status": "completed", "agent": "nulogic-pr-assembler", "pr_number": 4, "pr_url": "https://github.com/NUTechnolgyInc/ai-nu-skillsync/pull/4", "branch": "feature/SKILL-3-staffing-matcher"},
-    "12": {"status": "pending", "agent": "nulogic-deployment-agent"}
+    "12": {"status": "n/a", "agent": "nulogic-deployment-agent", "reason": "No deploy target — local-only hackathon run (all integrations disabled, no pre-prod/prod env). Ships via PR #4 -> main on human merge. Matches SKILL-2 Stage 12 N/A."}
   },
   "review_overrides": {},
   "blocking_conditions": [],
