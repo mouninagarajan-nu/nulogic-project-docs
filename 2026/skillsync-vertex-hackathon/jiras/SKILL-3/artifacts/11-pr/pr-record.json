@@ -1,0 +1,11 @@
+{
+  "jira_id": "SKILL-3",
+  "pr_number": 4,
+  "pr_url": "https://github.com/NUTechnolgyInc/ai-nu-skillsync/pull/4",
+  "branch_name": "feature/SKILL-3-staffing-matcher",
+  "base_branch": "main",
+  "repository": "NUTechnolgyInc/ai-nu-skillsync",
+  "title": "feat(SKILL-3): staffing matcher — availability-aware ranked shortlist via Opus",
+  "status": "open",
+  "created_at": "2026-06-09T00:00:00Z"
+}

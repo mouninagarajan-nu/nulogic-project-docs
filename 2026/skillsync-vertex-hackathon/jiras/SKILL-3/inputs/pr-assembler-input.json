@@ -1,0 +1,28 @@
+{
+  "jira_id": "SKILL-3",
+  "workflow_stage": "pr-assembly",
+  "local_only": true,
+  "council_approval_status": "not_required",
+  "context": {
+    "previous_artifacts": [
+      "artifacts/08-implementation/",
+      "artifacts/09-quality-gates/",
+      "artifacts/10-documentation/"
+    ],
+    "code_repository": {
+      "name": "ai-nu-skillsync",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+      "remote": "git@github.com:NUTechnolgyInc/ai-nu-skillsync.git",
+      "branch": "feature/SKILL-3-staffing-matcher",
+      "base_branch": "main",
+      "gh_protocol": "https",
+      "commits": ["b9d4844 RED tests", "dcd9207 GREEN impl", "8c643cf Turbopack/Prisma + coverage tooling", "51244b1 tactical ADRs"]
+    },
+    "quality_summary": {
+      "tests": "58/58 green (19 SKILL-3)",
+      "coverage": "89.2% stmts / 70.4% branch (relaxed targets overall>=40/new>=45/branch>=40/critical>=75)",
+      "gates": "all 5 passed (security/test/performance/sre/local-integration)",
+      "typecheck": "clean", "lint": "0 errors"
+    }
+  }
+}

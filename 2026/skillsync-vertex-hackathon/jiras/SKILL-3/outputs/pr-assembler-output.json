@@ -1,0 +1,60 @@
+{
+  "jira_id": "SKILL-3",
+  "agent_id": "nulogic-pr-assembler",
+  "status": "success",
+  "artifacts_created": [
+    {
+      "type": "pr-description",
+      "path": "artifacts/11-pr/pr-description.md",
+      "description": "Generated PR description with full evidence package: AC coverage (AC-04/05/06/11/21), BR coverage (BR-03/04/05/09/12), 5 tactical ADRs (S3-01..05), quality gate results (58/58 tests; 89.2% stmt / 70.4% branch; all 5 gates passed), deferred tech debt."
+    },
+    {
+      "type": "pr-record",
+      "path": "artifacts/11-pr/pr-record.json",
+      "description": "PR number, URL, branch, and status."
+    }
+  ],
+  "summary": "PR #4 created: 'feat(SKILL-3): staffing matcher — availability-aware ranked shortlist via Opus'. 58/58 tests passing, 89.2% stmt coverage, all 5 quality gates passed. Branch feature/SKILL-3-staffing-matcher pushed and PR opened to main. SKILL-4 (hero loop) unblocked.",
+  "pr_details": {
+    "pr_number": 4,
+    "pr_url": "https://github.com/NUTechnolgyInc/ai-nu-skillsync/pull/4",
+    "branch_name": "feature/SKILL-3-staffing-matcher",
+    "target_branch": "main",
+    "reviewers_assigned": [],
+    "commit_sha": "51244b1"
+  },
+  "pre_merge_validation": {
+    "all_tests_passing": true,
+    "coverage_met": true,
+    "confidence_acceptable": true,
+    "dependencies_resolved": true,
+    "no_merge_conflicts": true
+  },
+  "quality_metrics": {
+    "tests_passing": 58,
+    "tests_total": 58,
+    "coverage_statements": "89.17%",
+    "coverage_branch": "70.41%",
+    "coverage_functions": "86.76%",
+    "coverage_lines": "92.01%",
+    "coverage_threshold_overall": "40%",
+    "coverage_threshold_new": "45%",
+    "coverage_threshold_branch": "40%",
+    "coverage_threshold_critical": "75%",
+    "all_thresholds_met": true,
+    "typecheck": "clean",
+    "lint": "0 errors"
+  },
+  "built_from": {
+    "prd": "v1",
+    "implementation_plan": "v3",
+    "tactical_adrs": "v3",
+    "test_scenarios": "v1",
+    "quality_gate_report": "combined-report.md"
+  },
+  "next_stage_ready": true,
+  "metadata": {
+    "execution_time_seconds": 45,
+    "assembled_at": "2026-06-09T00:00:00Z"
+  }
+}
