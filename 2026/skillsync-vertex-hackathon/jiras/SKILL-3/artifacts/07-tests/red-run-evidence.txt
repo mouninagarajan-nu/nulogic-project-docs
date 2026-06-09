@@ -1,0 +1,339 @@
+
+ RUN  v4.1.8 C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def
+
+ ✓ tests/staffing-matcher.test.ts > S3-P0-01 RED baseline — helper imports resolve, core import fails RED [P0] > RED baseline — helper imports resolve and loadModule fails on the missing core 14ms
+ × tests/staffing-matcher.test.ts > S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid [P0] > MatchResult validates the canonical {results} payload with all BR-05 fields 135ms
+   → expected false to be true // Object.is equality
+ × tests/staffing-matcher.test.ts > S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid [P0] > MatchResult coerces a BARE ARRAY of entries into {results} and validates 11ms
+   → expected false to be true // Object.is equality
+ × tests/staffing-matcher.test.ts > S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid [P0] > MatchResult renames a top-level {shortlist} to {results}, preserving shortfallNote 4ms
+   → expected false to be true // Object.is equality
+ × tests/staffing-matcher.test.ts > S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid [P0] > MatchResult REJECTS the legacy SKILL-1 {matches:[{handle,score}]} stub shape 5ms
+   → expected true to be false // Object.is equality
+ × tests/staffing-matcher.test.ts > S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid [P0] > MatchResult REJECTS matchPercent out of 0..100 while accepting an in-range bare array (coercion did NOT weaken validation, BR-09) 4ms
+   → expected false to be true // Object.is equality
+ × tests/staffing-matcher.test.ts > S3-P1-02 ranking-rules + dataset live in the cacheable system context, query in the user turn [P1] > the assembled system arg carries the ranking rules + dataset; the user turn carries the query only 7ms
+   → Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > Dataset builder — role-scope + determinism (BR-03/BR-12) [P0/P1] > S3-P2-01 Practice Lead dataset contains ONLY team members (leadId == caller.id) 517ms
+   → Cannot find package '@/lib/match/dataset' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > Dataset builder — role-scope + determinism (BR-03/BR-12) [P0/P1] > S3-P2-02 Employee role is DENIED a dataset (no org-wide build, no downstream Claude call) 44ms
+   → Cannot find package '@/lib/match/dataset' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > Dataset builder — role-scope + determinism (BR-03/BR-12) [P0/P1] > S3-P2-03 serialization is byte-identical for identical input (cache + loop determinism) 34ms
+   → Cannot find package '@/lib/match/dataset' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > Dataset builder — role-scope + determinism (BR-03/BR-12) [P0/P1] > S3-P2-04 Practice Lead with no team yields an empty dataset, never an error 52ms
+   → Cannot find package '@/lib/match/dataset' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > AC-04 Availability-aware ranked match (happy path) [P0] > S3-P3-01 ranks the more-available candidate above the equally-skilled out-of-window one 4ms
+   → Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > AC-05 Hard match — closest people + gaps (edge) [P1] > S3-P3-02 returns closest available people with explicit gap/ramp-up analysis, never empty 4ms
+   → Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > AC-21 Partial-quantity fulfillment (edge) [P1] > S3-P3-03 returns the fewer-than-requested qualifiers WITH an explicit shortfall note 4ms
+   → Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > AC-06 Staffing search failure (error) [P1] > S3-P3-04 shows no partial/garbled ranking and the exact retry message when Claude THROWS 4ms
+   → Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > AC-06 Staffing search failure (error) [P1] > S3-P3-05 ADDITIVE — garbled JSON fails the Zod/extract gate → retry message, no results 4ms
+   → Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > BR-12 Opus routing + ranking-rules-and-dataset-in-cache [P0] > S3-P3-06 invokes the boundary with the Opus model id and the cached system context (rules + dataset) 3ms
+   → Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > AC-11 / AC-06 transport — role gate + failure mapping (read-only) [P0/P1] > S3-P4-01 Employee calling the matcher is denied via the dataset path before any model call 44ms
+   → Cannot find package '@/lib/match/dataset' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ × tests/staffing-matcher.test.ts > AC-11 / AC-06 transport — role gate + failure mapping (read-only) [P0/P1] > S3-P4-02 core failure surfaces the retry message with no results (read-only — no DB write) 75ms
+   → Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 18 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/staffing-matcher.test.ts > S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid [P0] > MatchResult validates the canonical {results} payload with all BR-05 fields
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/staffing-matcher.test.ts:166:28
+    164|     );
+    165|     const parsed = MatchResult.safeParse({ results: [entry], shortfall…
+    166|     expect(parsed.success).toBe(true);
+       |                            ^
+    167|     const results = (parsed.data as { results: Array<Record<string, un…
+    168|     for (const key of ["profileId", "matchPercent", "matchedSkills", "…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid [P0] > MatchResult coerces a BARE ARRAY of entries into {results} and validates
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/staffing-matcher.test.ts:179:28
+    177|     // Exactly what makeClaudeClientSpy([...]) JSON.stringifies for AC…
+    178|     const parsed = MatchResult.safeParse([entry]);
+    179|     expect(parsed.success).toBe(true);
+       |                            ^
+    180|     expect((parsed.data as { results: unknown[] }).results.length).toB…
+    181|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid [P0] > MatchResult renames a top-level {shortlist} to {results}, preserving shortfallNote
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/staffing-matcher.test.ts:189:28
+    187|     // Exactly what makeClaudeClientSpy({shortlist,...}) JSON.stringif…
+    188|     const parsed = MatchResult.safeParse({ shortlist: [entry], shortfa…
+    189|     expect(parsed.success).toBe(true);
+       |                            ^
+    190|     expect((parsed.data as { results: unknown[] }).results.length).toB…
+    191|     expect((parsed.data as { shortfallNote?: string }).shortfallNote).…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid [P0] > MatchResult REJECTS the legacy SKILL-1 {matches:[{handle,score}]} stub shape
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/staffing-matcher.test.ts:199:28
+    197|     );
+    198|     const parsed = MatchResult.safeParse({ matches: [{ handle: "synthe…
+    199|     expect(parsed.success).toBe(false); // SKILL-1 stub superseded (TA…
+       |                            ^
+    200|   });
+    201|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid [P0] > MatchResult REJECTS matchPercent out of 0..100 while accepting an in-range bare array (coercion did NOT weaken validation, BR-09)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/staffing-matcher.test.ts:210:77
+    208|     // 0..100 check still fires AFTER coercion). A schema that simply …
+    209|     // (e.g. the SKILL-1 stub) fails the first assertion — so this can…
+    210|     expect(MatchResult.safeParse([{ ...entry, matchPercent: 85 }]).suc…
+       |                                                                             ^
+    211|     expect(MatchResult.safeParse([{ ...entry, matchPercent: 250 }]).su…
+    212|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > S3-P1-02 ranking-rules + dataset live in the cacheable system context, query in the user turn [P1] > the assembled system arg carries the ranking rules + dataset; the user turn carries the query only
+Error: Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:223:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > Dataset builder — role-scope + determinism (BR-03/BR-12) [P0/P1] > S3-P2-01 Practice Lead dataset contains ONLY team members (leadId == caller.id)
+Error: Cannot find package '@/lib/match/dataset' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:252:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > Dataset builder — role-scope + determinism (BR-03/BR-12) [P0/P1] > S3-P2-02 Employee role is DENIED a dataset (no org-wide build, no downstream Claude call)
+Error: Cannot find package '@/lib/match/dataset' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:261:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > Dataset builder — role-scope + determinism (BR-03/BR-12) [P0/P1] > S3-P2-03 serialization is byte-identical for identical input (cache + loop determinism)
+Error: Cannot find package '@/lib/match/dataset' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:269:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > Dataset builder — role-scope + determinism (BR-03/BR-12) [P0/P1] > S3-P2-04 Practice Lead with no team yields an empty dataset, never an error
+Error: Cannot find package '@/lib/match/dataset' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:278:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > AC-04 Availability-aware ranked match (happy path) [P0] > S3-P3-01 ranks the more-available candidate above the equally-skilled out-of-window one
+Error: Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:339:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > AC-05 Hard match — closest people + gaps (edge) [P1] > S3-P3-02 returns closest available people with explicit gap/ramp-up analysis, never empty
+Error: Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:384:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > AC-21 Partial-quantity fulfillment (edge) [P1] > S3-P3-03 returns the fewer-than-requested qualifiers WITH an explicit shortfall note
+Error: Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:407:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > AC-06 Staffing search failure (error) [P1] > S3-P3-04 shows no partial/garbled ranking and the exact retry message when Claude THROWS
+Error: Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:422:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > AC-06 Staffing search failure (error) [P1] > S3-P3-05 ADDITIVE — garbled JSON fails the Zod/extract gate → retry message, no results
+Error: Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:433:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > BR-12 Opus routing + ranking-rules-and-dataset-in-cache [P0] > S3-P3-06 invokes the boundary with the Opus model id and the cached system context (rules + dataset)
+Error: Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:446:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > AC-11 / AC-06 transport — role gate + failure mapping (read-only) [P0/P1] > S3-P4-01 Employee calling the matcher is denied via the dataset path before any model call
+Error: Cannot find package '@/lib/match/dataset' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:471:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/18]⎯
+
+ FAIL  tests/staffing-matcher.test.ts > AC-11 / AC-06 transport — role gate + failure mapping (read-only) [P0/P1] > S3-P4-02 core failure surfaces the retry message with no results (read-only — no DB write)
+Error: Cannot find package '@/lib/match/run-staffing-search' imported from C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/.claude/worktrees/agent-a05f59100cdd95def/tests/setup/test-helpers.ts
+ ❯ loadModule tests/setup/test-helpers.ts:70:11
+     68|   // The variable specifier keeps tsc from statically resolving the (a…
+     69|   // module; the dynamic import throws at runtime until the core is im…
+     70|   return (await import(/* @vite-ignore */ specifier)) as T;
+       |           ^
+     71| }
+     72|
+ ❯ tests/staffing-matcher.test.ts:482:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ERR_MODULE_NOT_FOUND' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/18]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  18 failed | 1 passed (19)
+   Start at  08:01:49
+   Duration  18.73s (transform 281ms, setup 48ms, import 116ms, tests 981ms, environment 0ms)
+

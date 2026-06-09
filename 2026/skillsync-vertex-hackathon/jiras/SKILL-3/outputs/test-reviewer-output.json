@@ -1,0 +1,93 @@
+{
+  "agent_id": "nulogic-test-reviewer",
+  "jira_id": "SKILL-3",
+  "initiative_name": "skillsync-vertex-hackathon",
+  "stage": "07-tests",
+  "sub_agent": "reviewer",
+  "iteration": 1,
+  "reviewed_at": "2026-06-09",
+  "status": "approved",
+  "total_findings": 0,
+  "new_gaps_found": 0,
+  "next_stage_ready": true,
+  "human_review_required": false,
+  "feedback": [],
+  "gaps_found": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0
+  },
+  "review_results": {
+    "ac_coverage": { "passed": 5, "failed": 0, "total": 5 },
+    "scenario_coverage": { "passed": 15, "failed": 0, "total": 15 },
+    "edge_cases": { "passed": 7, "failed": 0, "total": 7 },
+    "test_quality": { "passed": 19, "failed": 0, "total": 19 },
+    "mock_accuracy": { "passed": 5, "failed": 0, "total": 5 },
+    "br_coverage": { "passed": 5, "failed": 0, "total": 5 },
+    "negative_testing": { "passed": 4, "failed": 0, "total": 4 },
+    "relevance": { "passed": 19, "failed": 0, "total": 19 },
+    "coverage_prediction": { "passed": 1, "failed": 0, "total": 1 },
+    "failing_state": { "passed": 19, "failed": 0, "total": 19 },
+    "manifest_reconciliation": { "passed": 1, "failed": 0, "total": 1 },
+    "scenario_to_test_diff": { "passed": 15, "failed": 0, "total": 15 },
+    "fixture_vs_contract": { "passed": 1, "failed": 0, "total": 1 },
+    "test_vs_stub_semantic": { "passed": 19, "failed": 0, "total": 19 },
+    "classification_audit": { "passed": 19, "failed": 0, "total": 19 },
+    "global_state": { "passed": 19, "failed": 0, "total": 19 },
+    "tadr_compliance": { "passed": 5, "failed": 0, "total": 5 }
+  },
+  "ac_to_test_map": {
+    "AC-04": { "status": "MAPPED", "scenarios": ["S3-P1-01", "S3-P1-02", "S3-P2-03", "S3-P3-01", "S3-P3-06"] },
+    "AC-05": { "status": "MAPPED", "scenarios": ["S3-P1-01", "S3-P3-02"] },
+    "AC-06": { "status": "MAPPED", "scenarios": ["S3-P3-04", "S3-P3-05", "S3-P4-02"] },
+    "AC-21": { "status": "MAPPED", "scenarios": ["S3-P1-01", "S3-P3-03"] },
+    "AC-11": { "status": "MAPPED", "scenarios": ["S3-P2-01", "S3-P2-02", "S3-P2-04", "S3-P4-01"] }
+  },
+  "br_to_test_map": {
+    "BR-03": "BR_TESTED",
+    "BR-04": "BR_TESTED",
+    "BR-05": "BR_TESTED",
+    "BR-09": "BR_TESTED",
+    "BR-12": "BR_TESTED"
+  },
+  "failing_state_evidence": {
+    "command": "pnpm vitest run tests/staffing-matcher.test.ts",
+    "re_run_by_reviewer": true,
+    "result": "18 failed | 1 passed (19)",
+    "all_failures_meaningful": true,
+    "missing_module_failures": 13,
+    "unmet_schema_contract_failures": 5,
+    "intended_baseline_pass": 1,
+    "hidden_green": false,
+    "compile_error": false,
+    "tests_uncommitted": true,
+    "git_state": "tests/staffing-matcher.test.ts untracked; tests/setup/test-helpers.ts modified — no committed failing tests on branch (correct TDD RED)"
+  },
+  "verification_checks": {
+    "a_genuinely_red_for_right_reason": "PASS — re-ran the suite from the live repo (branch feature/SKILL-3-staffing-matcher). 13 fail on ERR_MODULE_NOT_FOUND for @/lib/match/run-staffing-search and @/lib/match/dataset; 5 fail on the unmet MatchResult contract (the SKILL-1 stub {matches:[{handle,score}]} is loaded and correctly rejects {results}/bare-array/{shortlist}/in-range-bare-array and wrongly accepts legacy {matches}). No harness/compile error, no silent skip.",
+    "b_cannot_trivially_pass_or_fake_green": "PASS — S3-P1-01's in-range-vs-out-of-range bare-array pair forces the coercion to RUN and still enforce matchPercent 0..100, so a schema that blindly rejects every bare array fails the first assertion and one that drops entry validation fails the second. Result-relationship assertions (S3-P3-01) read rank/index/inRequestedWindow from scripted equal-matchPercent output, so an in-code keyword/skills ranker cannot satisfy them. createMessage call-count==1 + system/messages split (S3-P1-02/S3-P3-06) prevent a code-side ranker from green-ing.",
+    "c_availability_asserted_via_spy_not_code_date_math": "PASS — BR-04 availability reasoning is asserted (i) via the spy-captured input: dataset+RANKING_RULES go in callArg.system (the cached breakpoint, claude.ts:118), query passes through to the user turn only and the dataset is NOT leaked there (S3-P1-02), and (ii) via the result relationship with equal matchPercent so only availability can explain ordering (S3-P3-01). No test asserts in-code date arithmetic; the fixture is only the dataset fed to the boundary.",
+    "d_failure_path_no_partial_ranking_exact_message": "PASS — S3-P3-04 (sdk throw) and S3-P3-05 (garbled JSON, the second distinct callClaude failure reason: extract/parse) and S3-P4-02 all assert ok===false, userMessage === the exact 'Search is temporarily unavailable — please retry.' string (held in a named constant per §2.7, not inlined), and res.shortlist === undefined (no partial ranking exposed)."
+  },
+  "mock_accuracy_notes": "makeClaudeClientSpy JSON.stringifies the scripted arg verbatim into one text block, so callClaude's internal extractStructuredBlock+safeParse (claude.ts:126-132) sees EXACTLY the scripted shape — the bare array (AC-04/05), the {shortlist,shortfallNote} object (AC-21), and the canonical {results} object are all faithful to the encodings TACTICAL-ADR-S3-05's coerceModelShape must normalize. makeClaudeClientGarbled returns non-JSON ('{ not: valid json <<<') which fails JSON.parse → extract Failure; makeClaudeClientThatThrows → sdk Failure. The CreateMessageArgs the spy captures ({model, system, messages}) matches the wrapper's wiring exactly, so the system-vs-messages placement assertions are contract-accurate.",
+    "coverage_prediction_notes": "Plausible to clear the relaxed targets (overall >=40 / new >=45 / branch >=40 / critical >=75) once GREEN: 19 it-blocks exercise MatchResult (canonical + both coercions + 2 negatives), prompt/cache placement, dataset (PL-team / Employee-denied / determinism / empty-team), and all four core branches + Opus routing + transport failure mapping. Critical paths (the four run-staffing-search branches + dataset scope/determinism) are directly hit. app/api/match/route.ts is intentionally NOT covered (Phase 4 asserts at the core+dataset seam; UI/route harness deferred to SKILL-6) — documented in the plan §7/Phase 4 and acceptable for a thin ~45 LOC read-only transport under relaxed targets; not a finding.",
+  "tadr_compliance_notes": "TADR-S3-01 (functional core runStaffingSearch + dataset builder + route): tests drive runStaffingSearch({query,profiles,claude}) and buildMatchDataset(session) exactly. TADR-S3-02 (rank/inRequestedWindow optional superset): asserted in S3-P3-01. TADR-S3-03 (rewrite SKILL-1 stub): S3-P1-01 rejects legacy {matches}. TADR-S3-04 (CoreProfileRecord/toCoreRecord): S3-P3-01 injects the authored {id,handle,allocationPct,...} shape; S3-P2-* expects {profileId,...}. TADR-S3-05 (z.preprocess coerceModelShape): S3-P1-01 asserts both coercions before the unchanged entry-level validation. Vitest + Zod + injected-double harness honored throughout.",
+  "quality_over_quantity_notes": "No padding, tautologies, or trivial assertions detected. No toBeTruthy/toBeDefined-only assertions. No consolidation candidates that would lose distinct branch coverage — the 5 S3-P1-01 it-blocks each cover a distinct encoding/negative and are correctly grouped. S3-P0-01's pass is an explicitly-labelled RED-state sanity guard (helper imports resolve + core import rejects), not a feature assertion, and is appropriate. Naming carries verbatim scenario phrases (availability, out-of-window, shortfall note, retry message).",
+  "manifest_reconciliation_notes": "test-manifest.json total_it_blocks=19 (unit 6 / integration 13) reconciles with the source it( count (S3-P0-01=1, S3-P1-01=5, S3-P1-02=1, S3-P2=4, S3-P3=6, S3-P4=2 = 19), the README ('18 failed | 1 passed (19)'), and the re-run transcript. scenario_diff: planned 15 == generated 15, no missing, no unjustified exclusions. Four result branches (happy/hard/partial/failure x2) all mapped.",
+  "artifacts_created": [
+    "outputs/test-reviewer-output.json"
+  ],
+  "built_from": {
+    "story": "SKILL-3 STORY.md",
+    "implementation_plan": "v3 (artifacts/06-planning/implementation-plan.md)",
+    "tactical_adrs": "v3 (TACTICAL-ADR-S3-01..05)",
+    "test_scenarios": "v3 (artifacts/06-planning/test-scenarios.json, 15 scenarios)",
+    "authored_acceptance_test": "artifacts/02-acceptance-tests/e2e-tests/staffing-matcher.test.ts",
+    "test_manifest": "artifacts/07-tests/test-manifest.json",
+    "test_files": [
+      "tests/staffing-matcher.test.ts (ai-nu-skillsync)",
+      "tests/setup/test-helpers.ts (ai-nu-skillsync)"
+    ]
+  }
+}

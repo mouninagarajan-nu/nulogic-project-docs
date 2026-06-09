@@ -1,0 +1,80 @@
+{
+  "jira_id": "SKILL-3",
+  "stage": "test-creation",
+  "status": "success",
+  "generated_by": "nulogic-test-creator",
+  "generated_at": "2026-06-09",
+  "local_only": true,
+  "summary": "Adapted the binding authored acceptance test into the repo Vitest harness at tests/staffing-matcher.test.ts and added the 15-scenario plan's additive coverage (schema coercion, prompt cache placement, dataset role-scope/determinism, garbled-JSON failure, Opus routing, transport). Extended tests/setup/test-helpers.ts with loadModule + SYNTHETIC_PROFILES (F-01) so the suite imports. All 18 feature tests are RED for the right reason (missing @/lib/match/* modules + the unmet MatchResult §2.5/coercion contract); the 1 passing test is the intended S3-P0-01 RED-state sanity check (helpers resolve, core import rejects). The SKILL-2 cert suite (16 tests) still passes — the helper change is purely additive. Tests inject a stubbed Claude client; no live API calls. Tests are staged, not committed.",
+  "binding_contract_decision": "Adapted authored acceptance test into the code repo as the binding suite (per implementation-plan Phase 0). F-01 helper extension applied so the authored imports resolve.",
+  "built_from": {
+    "prd": "v1",
+    "target_state_architecture": "v1",
+    "acceptance_tests": "v1",
+    "implementation_plan": "v3",
+    "tactical_adrs": "v3"
+  },
+  "coverage_targets": { "overall": 40, "new": 45, "branch": 40, "critical_paths": 75 },
+  "test_command": "pnpm test",
+  "single_file_test_command": "pnpm vitest run tests/staffing-matcher.test.ts",
+  "test_statistics": {
+    "total_tests": 19,
+    "red_failing": 18,
+    "red_baseline_sanity_pass": 1,
+    "criteria_covered": ["AC-04", "AC-05", "AC-06", "AC-21", "AC-11", "BR-03", "BR-04", "BR-05", "BR-09", "BR-12"],
+    "all_criteria_covered": true,
+    "four_result_branches_covered": true,
+    "coverage_percentage": null,
+    "predicted_code_coverage": "n/a (RED phase — coverage measured after GREEN; relaxed targets recorded)",
+    "meets_target": "pending GREEN",
+    "test_breakdown": { "unit": 6, "integration": 13, "performance": 0, "total_it_blocks": 19 }
+  },
+  "performance_tests_required": false,
+  "performance_tests_rationale": "Single injected Claude call, no DB writes, model-dominated latency mitigated by prompt caching + SKILL-6 loading state. No backend throughput/batch surface to load-test.",
+  "red_state_confirmed": true,
+  "red_state_evidence": {
+    "result_line": "Test Files  1 failed (1) | Tests  18 failed | 1 passed (19)",
+    "failure_reasons": {
+      "missing_module": 13,
+      "unmet_schema_contract": 5,
+      "intended_baseline_sanity_pass": 1
+    },
+    "transcript": "artifacts/07-tests/red-run-evidence.txt"
+  },
+  "typecheck": "pnpm typecheck passes (after prisma generate); test files + helper compile cleanly",
+  "regression_check": "tests/cert-parsing.test.ts — 16 passed (SKILL-2 unaffected by additive helper exports)",
+  "git_branch_created": "feature/SKILL-3-staffing-matcher (already existed; worktree branch worktree-agent-a05f59100cdd95def off it)",
+  "tests_staged_not_committed": true,
+  "staged_files": ["tests/staffing-matcher.test.ts", "tests/setup/test-helpers.ts"],
+  "artifacts_created": [
+    {
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/staffing-matcher.test.ts",
+      "type": "executable_test",
+      "location": "source_repo",
+      "action": "created"
+    },
+    {
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync/tests/setup/test-helpers.ts",
+      "type": "test_helper",
+      "location": "source_repo",
+      "action": "modified"
+    },
+    {
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/jiras/SKILL-3/artifacts/07-tests/test-manifest.json",
+      "type": "metadata",
+      "location": "orchestration"
+    },
+    {
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/jiras/SKILL-3/artifacts/07-tests/README.md",
+      "type": "metadata",
+      "location": "orchestration"
+    },
+    {
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/jiras/SKILL-3/artifacts/07-tests/red-run-evidence.txt",
+      "type": "evidence",
+      "location": "orchestration"
+    }
+  ],
+  "next_stage": "code-writing (nulogic-code-writer)",
+  "next_stage_ready": true
+}

@@ -1,0 +1,253 @@
+{
+  "jira_id": "SKILL-3",
+  "title": "Staffing Matcher — availability-aware ranked shortlist",
+  "stage": "07-tests",
+  "iteration": 1,
+  "generated_by": "nulogic-test-creator",
+  "generated_at": "2026-06-09",
+  "branding": "NULogic",
+  "status": "RED",
+  "test_framework": "vitest",
+  "single_file_command": "pnpm vitest run tests/staffing-matcher.test.ts",
+  "run_all_command": "pnpm test",
+  "module_under_test": "@/lib/match/run-staffing-search",
+  "built_from": {
+    "prd": "v1",
+    "target_state_architecture": "v1",
+    "acceptance_tests": "v1",
+    "implementation_plan": "v3",
+    "tactical_adrs": "v3"
+  },
+  "coverage_targets": { "overall": 40, "new": 45, "branch": 40, "critical_paths": 75 },
+  "intelligence_boundary_rule": "Every ranking/availability judgement routes through the INJECTED Claude double (no live API). Assertions target the call boundary, the Zod-validated shape, the result RELATIONSHIP (in-window ranked above equally-skilled out-of-window via rank/inRequestedWindow), graceful failure, and role-scope — never a literal the mock scripted, never code-side keyword/regex/date logic.",
+  "binding_contract_decision": "The authored acceptance test (artifacts/02-acceptance-tests/e2e-tests/staffing-matcher.test.ts) is ADAPTED into the repo harness at tests/staffing-matcher.test.ts. The four AC blocks (AC-04/05/21/06) are carried in intent; the 15-scenario plan's additive scenarios (schema coercion, prompt cache placement, dataset role-scope/determinism, garbled-JSON failure, Opus routing, transport) are added per the plan's Phase 0 guidance. F-01 fix: tests/setup/test-helpers.ts extended with loadModule + SYNTHETIC_PROFILES so the suite can import.",
+  "performance_tests_required": false,
+  "performance_tests_rationale": "SKILL-3 reads through a single injected Claude call with no DB writes; latency is dominated by the model (Opus) and handled via prompt caching + a UI loading state deferred to SKILL-6. No backend throughput/batch surface to load-test in this story. Not applicable per the agent's Step-5 matrix.",
+  "files": {
+    "created": ["tests/staffing-matcher.test.ts"],
+    "modified": ["tests/setup/test-helpers.ts"]
+  },
+  "test_breakdown": {
+    "unit": 6,
+    "integration": 13,
+    "performance": 0,
+    "total_it_blocks": 19,
+    "red_failing": 18,
+    "red_baseline_sanity_pass": 1
+  },
+  "test_inventory": [
+    {
+      "scenario_id": "S3-P0-01",
+      "phase": 0,
+      "test_type": "integration",
+      "priority": "P0",
+      "describe": "S3-P0-01 RED baseline — helper imports resolve, core import fails RED",
+      "it": "RED baseline — helper imports resolve and loadModule fails on the missing core",
+      "acs": [],
+      "brs": ["BR-09"],
+      "status": "passing (intended RED-state sanity check: helper imports resolve; loadModule(core) rejects)",
+      "asserts": "loadModule + SYNTHETIC_PROFILES resolve (F-01 closed); loadModule('@/lib/match/run-staffing-search') rejects (missing core)"
+    },
+    {
+      "scenario_id": "S3-P1-01",
+      "phase": 1,
+      "test_type": "unit",
+      "priority": "P0",
+      "describe": "S3-P1-01 MatchResult — §2.5 shape, coerces bare-array & {shortlist}, rejects legacy/invalid",
+      "it": [
+        "MatchResult validates the canonical {results} payload with all BR-05 fields",
+        "MatchResult coerces a BARE ARRAY of entries into {results} and validates",
+        "MatchResult renames a top-level {shortlist} to {results}, preserving shortfallNote",
+        "MatchResult REJECTS the legacy SKILL-1 {matches:[{handle,score}]} stub shape",
+        "MatchResult REJECTS matchPercent out of 0..100 while accepting an in-range bare array"
+      ],
+      "acs": ["AC-04", "AC-05", "AC-21"],
+      "brs": ["BR-05", "BR-09"],
+      "status": "failing (RED — stub MatchResult does not implement §2.5 + z.preprocess coercion; TACTICAL-ADR-S3-05)",
+      "asserts": "canonical {results} validates with BR-05 fields; bare array & {shortlist} coerce to {results}; legacy {matches} rejected; entry-level 0..100 still enforced after coercion (in-range accepted, 250 rejected)"
+    },
+    {
+      "scenario_id": "S3-P1-02",
+      "phase": 1,
+      "test_type": "unit",
+      "priority": "P1",
+      "describe": "S3-P1-02 ranking-rules + dataset live in the cacheable system context, query in the user turn",
+      "it": "the assembled system arg carries the ranking rules + dataset; the user turn carries the query only",
+      "acs": ["AC-04"],
+      "brs": ["BR-04", "BR-12"],
+      "status": "failing (RED — core module missing)",
+      "asserts": "spy call args: system arg contains ranking-rules text + serialized dataset (profileId); user turn contains the query only and NOT the dataset (F-03)"
+    },
+    {
+      "scenario_id": "S3-P2-01",
+      "phase": 2,
+      "test_type": "integration",
+      "priority": "P1",
+      "describe": "Dataset builder — role-scope + determinism (BR-03/BR-12)",
+      "it": "S3-P2-01 Practice Lead dataset contains ONLY team members (leadId == caller.id)",
+      "acs": ["AC-11"],
+      "brs": ["BR-03"],
+      "status": "failing (RED — @/lib/match/dataset missing)",
+      "asserts": "PL dataset == exactly the two reports; no org leak; outsider absent"
+    },
+    {
+      "scenario_id": "S3-P2-02",
+      "phase": 2,
+      "test_type": "integration",
+      "priority": "P0",
+      "describe": "Dataset builder — role-scope + determinism (BR-03/BR-12)",
+      "it": "S3-P2-02 Employee role is DENIED a dataset (no org-wide build, no downstream Claude call)",
+      "acs": ["AC-11"],
+      "brs": ["BR-03"],
+      "status": "failing (RED — @/lib/match/dataset missing)",
+      "asserts": "Employee session -> Denied marker (not an array); no org dataset built"
+    },
+    {
+      "scenario_id": "S3-P2-03",
+      "phase": 2,
+      "test_type": "integration",
+      "priority": "P0",
+      "describe": "Dataset builder — role-scope + determinism (BR-03/BR-12)",
+      "it": "S3-P2-03 serialization is byte-identical for identical input (cache + loop determinism)",
+      "acs": ["AC-04"],
+      "brs": ["BR-12"],
+      "status": "failing (RED — @/lib/match/dataset missing)",
+      "asserts": "serializeDataset(build) == serializeDataset(build) for identical input (cache reuse)"
+    },
+    {
+      "scenario_id": "S3-P2-04",
+      "phase": 2,
+      "test_type": "integration",
+      "priority": "P2",
+      "describe": "Dataset builder — role-scope + determinism (BR-03/BR-12)",
+      "it": "S3-P2-04 Practice Lead with no team yields an empty dataset, never an error",
+      "acs": ["AC-11"],
+      "brs": ["BR-03"],
+      "status": "failing (RED — @/lib/match/dataset missing)",
+      "asserts": "empty-team PL -> empty array, no throw"
+    },
+    {
+      "scenario_id": "S3-P3-01",
+      "phase": 3,
+      "test_type": "integration",
+      "priority": "P0",
+      "describe": "AC-04 Availability-aware ranked match (happy path)",
+      "it": "S3-P3-01 ranks the more-available candidate above the equally-skilled out-of-window one",
+      "acs": ["AC-04"],
+      "brs": ["BR-04", "BR-05", "BR-09", "BR-12"],
+      "status": "failing (RED — core missing)",
+      "asserts": "claude.createMessage called once; ok; BR-05 fields present; equal matchPercent; in-window ranked above out-of-window (rank + index + inRequestedWindow) — availability, not skills, drove ordering"
+    },
+    {
+      "scenario_id": "S3-P3-02",
+      "phase": 3,
+      "test_type": "integration",
+      "priority": "P1",
+      "describe": "AC-05 Hard match — closest people + gaps (edge)",
+      "it": "S3-P3-02 returns closest available people with explicit gap/ramp-up analysis, never empty",
+      "acs": ["AC-05"],
+      "brs": ["BR-05"],
+      "status": "failing (RED — core missing)",
+      "asserts": "ok; shortlist non-empty; top entry has non-empty gaps[]"
+    },
+    {
+      "scenario_id": "S3-P3-03",
+      "phase": 3,
+      "test_type": "integration",
+      "priority": "P1",
+      "describe": "AC-21 Partial-quantity fulfillment (edge)",
+      "it": "S3-P3-03 returns the fewer-than-requested qualifiers WITH an explicit shortfall note",
+      "acs": ["AC-21"],
+      "brs": ["BR-05"],
+      "status": "failing (RED — core missing)",
+      "asserts": "ok; shortlist.length === 2 (coerced from {shortlist}); shortfallNote matches /2 of 3/"
+    },
+    {
+      "scenario_id": "S3-P3-04",
+      "phase": 3,
+      "test_type": "integration",
+      "priority": "P1",
+      "describe": "AC-06 Staffing search failure (error)",
+      "it": "S3-P3-04 shows no partial/garbled ranking and the exact retry message when Claude THROWS",
+      "acs": ["AC-06"],
+      "brs": ["BR-09"],
+      "status": "failing (RED — core missing)",
+      "asserts": "ok===false; userMessage === exact retry string; no shortlist exposed"
+    },
+    {
+      "scenario_id": "S3-P3-05",
+      "phase": 3,
+      "test_type": "integration",
+      "priority": "P1",
+      "additive": true,
+      "additive_rationale": "F-06: covers the second distinct callClaude failure reason (garbled JSON extract/parse), not in the authored test.",
+      "describe": "AC-06 Staffing search failure (error)",
+      "it": "S3-P3-05 ADDITIVE — garbled JSON fails the Zod/extract gate → retry message, no results",
+      "acs": ["AC-06"],
+      "brs": ["BR-09"],
+      "status": "failing (RED — core missing)",
+      "asserts": "garbled JSON -> ok===false; exact retry string; no shortlist; never repaired into a ranking"
+    },
+    {
+      "scenario_id": "S3-P3-06",
+      "phase": 3,
+      "test_type": "integration",
+      "priority": "P0",
+      "describe": "BR-12 Opus routing + ranking-rules-and-dataset-in-cache",
+      "it": "S3-P3-06 invokes the boundary with the Opus model id and the cached system context (rules + dataset)",
+      "acs": ["AC-04"],
+      "brs": ["BR-12"],
+      "status": "failing (RED — core missing)",
+      "asserts": "model === route('hard') (matches /opus/i); system arg carries ranking rules + dataset (F-03)"
+    },
+    {
+      "scenario_id": "S3-P4-01",
+      "phase": 4,
+      "test_type": "integration",
+      "priority": "P0",
+      "describe": "AC-11 / AC-06 transport — role gate + failure mapping (read-only)",
+      "it": "S3-P4-01 Employee calling the matcher is denied via the dataset path before any model call",
+      "acs": ["AC-11"],
+      "brs": ["BR-03"],
+      "status": "failing (RED — @/lib/match/dataset missing)",
+      "asserts": "Employee -> denied; the injected Claude double is never invoked for that session"
+    },
+    {
+      "scenario_id": "S3-P4-02",
+      "phase": 4,
+      "test_type": "integration",
+      "priority": "P1",
+      "describe": "AC-11 / AC-06 transport — role gate + failure mapping (read-only)",
+      "it": "S3-P4-02 core failure surfaces the retry message with no results (read-only — no DB write)",
+      "acs": ["AC-06"],
+      "brs": ["BR-09"],
+      "status": "failing (RED — core missing)",
+      "asserts": "core failure -> exact retry string; no shortlist exposed"
+    }
+  ],
+  "criteria_coverage": [
+    { "criterion": "AC-04", "scenarios": ["S3-P1-01", "S3-P1-02", "S3-P3-01", "S3-P2-03", "S3-P3-06"], "covered": true },
+    { "criterion": "AC-05", "scenarios": ["S3-P1-01", "S3-P3-02"], "covered": true },
+    { "criterion": "AC-06", "scenarios": ["S3-P3-04", "S3-P3-05", "S3-P4-02"], "covered": true },
+    { "criterion": "AC-21", "scenarios": ["S3-P1-01", "S3-P3-03"], "covered": true },
+    { "criterion": "AC-11", "scenarios": ["S3-P2-01", "S3-P2-02", "S3-P2-04", "S3-P4-01"], "covered": true },
+    { "criterion": "BR-03", "scenarios": ["S3-P2-01", "S3-P2-02", "S3-P2-04", "S3-P4-01"], "covered": true },
+    { "criterion": "BR-04", "scenarios": ["S3-P1-02", "S3-P3-01"], "covered": true },
+    { "criterion": "BR-05", "scenarios": ["S3-P1-01", "S3-P3-01", "S3-P3-02", "S3-P3-03"], "covered": true },
+    { "criterion": "BR-09", "scenarios": ["S3-P0-01", "S3-P1-01", "S3-P3-04", "S3-P3-05", "S3-P4-02"], "covered": true },
+    { "criterion": "BR-12", "scenarios": ["S3-P1-02", "S3-P2-03", "S3-P3-06"], "covered": true }
+  ],
+  "all_criteria_covered": true,
+  "four_result_branches": {
+    "happy": "S3-P3-01",
+    "hard_match": "S3-P3-02",
+    "partial_quantity": "S3-P3-03",
+    "failure": ["S3-P3-04 (sdk throw)", "S3-P3-05 (garbled JSON, additive)"]
+  },
+  "scenario_diff": {
+    "planned_scenario_ids": ["S3-P0-01","S3-P1-01","S3-P1-02","S3-P2-01","S3-P2-02","S3-P2-03","S3-P2-04","S3-P3-01","S3-P3-02","S3-P3-03","S3-P3-04","S3-P3-05","S3-P3-06","S3-P4-01","S3-P4-02"],
+    "generated_scenario_ids": ["S3-P0-01","S3-P1-01","S3-P1-02","S3-P2-01","S3-P2-02","S3-P2-03","S3-P2-04","S3-P3-01","S3-P3-02","S3-P3-03","S3-P3-04","S3-P3-05","S3-P3-06","S3-P4-01","S3-P4-02"],
+    "missing": [],
+    "excluded_scenarios": []
+  }
+}

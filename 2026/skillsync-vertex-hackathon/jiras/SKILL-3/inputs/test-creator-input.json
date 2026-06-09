@@ -1,0 +1,21 @@
+{
+  "jira_id": "SKILL-3",
+  "workflow_stage": "test-creation",
+  "local_only": true,
+  "context": {
+    "initiative_artifacts": [
+      "C:/Users/mouni.nagarajan/workspace/nulogic-project-docs/2026/skillsync-vertex-hackathon/artifacts/02-acceptance-tests/"
+    ],
+    "previous_artifacts": [
+      "artifacts/06-planning/"
+    ],
+    "code_repository": {
+      "name": "ai-nu-skillsync",
+      "path": "C:/Users/mouni.nagarajan/workspace/nulogic/ai-nu-skillsync",
+      "branch": "feature/SKILL-3-staffing-matcher",
+      "test_command": "pnpm test",
+      "single_file_test": "pnpm vitest run <path>"
+    },
+    "coverage_targets": {"overall": 40, "new": 45, "branch": 40, "critical_paths": 75}
+  }
+}
