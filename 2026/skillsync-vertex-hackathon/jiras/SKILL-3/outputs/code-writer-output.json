@@ -1,0 +1,83 @@
+{
+  "jira_id": "SKILL-3",
+  "agent_id": "nulogic-code-writer",
+  "iteration": 1,
+  "status": "retry_required",
+  "next_stage_ready": false,
+  "branch": "feature/SKILL-3-staffing-matcher",
+  "commit_sha": null,
+  "committed": false,
+  "summary": "Staffing-matcher production implementation is complete and correct: 6 files (~378 added LOC). All 18 binding contract tests in the staffing-matcher suite are GREEN, the full SKILL-1/SKILL-2 repo suite is unregressed (57/58 total), typecheck and lint are clean (0 errors). NOT committed as GREEN/success because ONE test — S3-P0-01 — is an unsatisfiable Phase-0 RED-baseline marker that cannot pass once the core module exists (it asserts the core module FAILS to import, while 13 other tests in the same file require it to import). S3-P0-01 carries no AC and is NOT in the binding authored acceptance contract. Per the 'do not weaken a test' rule it was left untouched and flagged for the test-creator to reconcile.",
+  "artifacts_created": [
+    { "type": "implementation", "path": "src/schemas/MatchResult.ts", "action": "modify", "description": "Rewrite SKILL-1 stub to Page-02 §2.5 + authored-test shape, wrapped in z.preprocess(coerceModelShape, z.object({...})) canonicalizing array|{shortlist}|{results} -> {results} before unchanged entry-level validation (TADR-S3-02/03/05).", "lines_changed": 63 },
+    { "type": "implementation", "path": "src/prompts/match-staffing.ts", "action": "modify", "description": "Render per-request queryText into the user turn only; ranking rules + dataset live in the cacheable system context, not the template (F-03).", "lines_changed": 13 },
+    { "type": "implementation", "path": "lib/match/config.ts", "action": "create", "description": "MATCH_UNAVAILABLE_MESSAGE (exact AC-06 string) + RANKING_RULES_PROMPT (cacheable system text: availability-over-skills, trust weighting, §2.5 output contract); no code-side date arithmetic (BR-04/BR-09).", "lines_changed": 40 },
+    { "type": "implementation", "path": "lib/match/dataset.ts", "action": "create", "description": "buildMatchDataset(session) role-scoped (MANAGER/ADMIN->org; PRACTICE_LEAD->team via leadId; EMPLOYEE->{denied:true}; no HR token, F-04), deterministic read-only Prisma projection -> CoreProfileRecord[] carrying trustState/seniority/timezone; serializeDataset() byte-identical.", "lines_changed": 102 },
+    { "type": "implementation", "path": "lib/match/run-staffing-search.ts", "action": "create", "description": "Functional core runStaffingSearch({query,profiles,claude}) + CoreProfileRecord + toCoreRecord normalizer (TADR-S3-04); single callClaude at complexity:'hard' (Opus, BR-12); results->shortlist mapping; exact retry message on failure with no partial ranking.", "lines_changed": 113 },
+    { "type": "implementation", "path": "app/api/match/route.ts", "action": "create", "description": "Read-only POST /api/match thin transport (TS-003): server-side role re-derivation, Employee denied before any model call (BR-03/AC-11), TODO-stubbed live Claude client (never faked), no DB writes.", "lines_changed": 61 },
+    { "type": "implementation-report", "path": "artifacts/08-implementation/implementation-report.md", "action": "create", "description": "What was built, file list, GREEN evidence, the S3-P0-01 deviation, and contract compliance." }
+  ],
+  "implementation_statistics": {
+    "files_created": 4,
+    "files_modified": 2,
+    "files_deleted": 0,
+    "total_lines_changed": 378,
+    "tests_total_staffing_suite": 19,
+    "tests_passing_staffing_suite": 18,
+    "tests_failing_staffing_suite": 1,
+    "tests_total_full_repo": 58,
+    "tests_passing_full_repo": 57,
+    "tests_failing_full_repo": 1,
+    "typecheck": "clean",
+    "lint": "clean (0 errors; 2 pre-existing warnings in files not touched by SKILL-3)",
+    "regression_to_skill1_skill2": "none (5/5 prior suites GREEN)",
+    "diff_budget": 500,
+    "diff_budget_plan_estimate": 392,
+    "diff_budget_used_pct": 76
+  },
+  "test_results": {
+    "single_file_command": "pnpm vitest run tests/staffing-matcher.test.ts",
+    "single_file_result": "1 failed | 18 passed (19)",
+    "full_suite_command": "pnpm test",
+    "full_suite_result": "Test Files 1 failed | 5 passed (6) · Tests 1 failed | 57 passed (58)",
+    "typecheck_command": "pnpm typecheck",
+    "typecheck_result": "0 errors",
+    "lint_command": "pnpm lint",
+    "lint_result": "0 errors, 2 pre-existing warnings (app/layout.tsx, tests/setup/global-db.ts — not SKILL-3 files)",
+    "prisma": "pnpm prisma generate run to materialize lib/generated/prisma/client (gitignored) before DB-backed tests",
+    "passing_scenarios": [
+      "S3-P1-01", "S3-P1-02", "S3-P2-01", "S3-P2-02", "S3-P2-03", "S3-P2-04",
+      "S3-P3-01", "S3-P3-02", "S3-P3-03", "S3-P3-04", "S3-P3-05", "S3-P3-06",
+      "S3-P4-01", "S3-P4-02"
+    ],
+    "failing_scenarios": ["S3-P0-01"]
+  },
+  "blocker": {
+    "type": "unsatisfiable_red_baseline_test",
+    "test_file": "tests/staffing-matcher.test.ts",
+    "scenario_id": "S3-P0-01",
+    "location": "tests/staffing-matcher.test.ts:131-141",
+    "acs": [],
+    "in_binding_acceptance_test": false,
+    "description": "S3-P0-01 asserts loadModule('@/lib/match/run-staffing-search').rejects.toBeDefined() — i.e. that the matcher core module FAILS to import. This is a Phase-0 RED-baseline harness-wiring guard whose own description says it is a 'meaningful RED' only WHILE the core is absent. The Phase-3 GREEN goal implements that exact core, so the assertion necessarily inverts. It is mutually exclusive with 13 other tests in the SAME file (S3-P1-02, S3-P3-01..06) that load the same module via loadModule and call .runStaffingSearch, requiring it to RESOLVE. No core implementation can satisfy both. It carries no AC and is not in the binding authored acceptance test (artifacts/02-acceptance-tests/e2e-tests/staffing-matcher.test.ts).",
+    "action_taken": "Left S3-P0-01 untouched per the 'do not weaken a test' rule; reported retry_required.",
+    "recommended_reconciliation_owner": "nulogic-test-creator",
+    "recommended_reconciliation": "Flip S3-P0-01 to assert the core now RESOLVES and exposes runStaffingSearch (post-GREEN 'module present' baseline), or retire it as a spent RED marker. Then the staffing suite is fully GREEN (19/19) and this stage can re-run to success + commit."
+  },
+  "deviations": [
+    "S3-P0-01 unsatisfiable RED-baseline marker — see blocker (flagged for test-creator, not weakened by code-writer).",
+    "Worktree isolation: the harness required edits via the agent worktree (which was at b5351fe, the SKILL-2 merge). Reset the worktree branch to b9d4844 (the SKILL-3 RED tip — a fast-forward descendant) so the RED tests were present, then implemented there. No git worktree add was run. The implementation is NOT yet committed (status is retry_required); on a clean all-green re-run the code-writer will commit 'feat(SKILL-3): staffing matcher -> ranked shortlist (GREEN)' and the orchestrator can fast-forward feature/SKILL-3-staffing-matcher to it."
+  ],
+  "built_from": {
+    "prd": "v1",
+    "target_state_architecture": "v1",
+    "acceptance_tests": "v1",
+    "implementation_plan": "iter-3",
+    "tactical_adrs": "iter-3",
+    "test_scenarios": "iter-3"
+  },
+  "metadata": {
+    "pipeline_stage": "08-implementation",
+    "model": "claude-opus-4-8[1m]"
+  }
+}

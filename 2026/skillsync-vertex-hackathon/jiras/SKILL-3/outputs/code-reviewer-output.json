@@ -1,0 +1,94 @@
+{
+  "agent_id": "nulogic-code-reviewer",
+  "jira_id": "SKILL-3",
+  "iteration": 2,
+  "status": "approved",
+  "total_findings": 0,
+  "new_gaps_found": 0,
+  "next_stage_ready": true,
+  "all_tests_passing": true,
+  "feedback": [],
+  "review_results": {
+    "ac_adherence": { "passed": 5, "failed": 0, "total": 5 },
+    "architecture_compliance": { "passed": 6, "failed": 0, "total": 6 },
+    "br_implementation": { "passed": 5, "failed": 0, "total": 5 },
+    "tactical_adrs": { "passed": 5, "failed": 0, "total": 5 },
+    "test_pass": { "passed": 58, "failed": 0, "total": 58 },
+    "diff_budget": { "passed": 1, "failed": 0, "total": 1 },
+    "security": { "passed": 4, "failed": 0, "total": 4 },
+    "code_quality": { "passed": 1, "failed": 0, "total": 1 },
+    "reuse": { "passed": 1, "failed": 0, "total": 1 },
+    "scope_creep": { "passed": 1, "failed": 0, "total": 1 },
+    "fake_detection": { "passed": 1, "failed": 0, "total": 1 },
+    "data_freshness": { "passed": 1, "failed": 0, "total": 1 },
+    "type_completeness": { "passed": 1, "failed": 0, "total": 1 },
+    "logic_correctness": { "passed": 1, "failed": 0, "total": 1 }
+  },
+  "gaps_found": { "critical": 0, "high": 0, "medium": 0, "low": 0 },
+  "test_results": {
+    "staffing_suite": {
+      "command": "pnpm vitest run tests/staffing-matcher.test.ts",
+      "passed": 19,
+      "failed": 0,
+      "total": 19,
+      "result": "GREEN"
+    },
+    "full_repo_suite": {
+      "command": "pnpm test",
+      "test_files": "6 passed (6)",
+      "passed": 58,
+      "failed": 0,
+      "total": 58,
+      "result": "GREEN"
+    },
+    "typecheck": { "command": "pnpm typecheck", "errors": 0, "result": "clean" },
+    "lint": {
+      "command": "pnpm lint",
+      "errors": 0,
+      "warnings": 6,
+      "result": "clean",
+      "note": "All 6 warnings are outside SKILL-3 scope: 4 in stale .claude/worktrees/* sandbox copies, plus pre-existing app/layout.tsx ('Geist' unused) and tests/setup/global-db.ts (unused eslint-disable). No warnings in any SKILL-3 production or test file."
+    }
+  },
+  "verification": {
+    "iteration_1_claimed_fix": {
+      "subject": "S3-P0-01 RED->GREEN reconciliation (committed at dcd9207)",
+      "verdict": "REPORT_MATCHES_DISK",
+      "evidence": "code-writer-output.json (iter 1) flagged S3-P0-01 as an unsatisfiable RED-baseline marker asserting the core module FAILS to import — mutually exclusive with its 13 sibling tests. Confirmed on disk at tests/staffing-matcher.test.ts:131-143: it now asserts `loadModule(MATCH_CORE)` resolves and `typeof mod.runStaffingSearch === 'function'` (post-GREEN module-present baseline). Legitimate spent-RED-marker retirement; no AC/BR coverage weakened — AC-04/05/06/21 + BR-03/04/05/09/12 remain independently exercised by S3-P1..P4 (18 sibling assertions, all GREEN)."
+    },
+    "loc_recompute": {
+      "production_added_loc": 378,
+      "writer_reported": 378,
+      "delta_pct": 0,
+      "verdict": "WITHIN_BUDGET",
+      "detail": "git diff --numstat b5351fe..HEAD over production files: route.ts +61, config.ts +40, dataset.ts +102, run-staffing-search.ts +113, match-staffing.ts +9/-4, MatchResult.ts +53/-10 = 378 added. Matches the writer report exactly; within the ~392 plan estimate and the 500 hard budget; no single file >100 changed except dataset.ts (102) and run-staffing-search.ts (113), both new-file creations of cohesive modules — acceptable."
+    },
+    "stale_tdd_grep": "NO_STALE_TDD — grep for TDD RED / FAILING / .skip / xit / @Disabled / @Ignore / TODO: implement across tests/ returned no matches.",
+    "dead_code_scan": "CLEAN — all new lib/match/* + src files are imported (run-staffing-search, dataset, config wired through route.ts and each other; MatchResult via barrel + core; match-staffing via prompt registry). app/api/match/route.ts is a Next.js file-routed handler (wired by convention).",
+    "old_schema_consumers": "NONE — no remaining references to the superseded SKILL-1 {matches:[{handle,score}]} shape in src/lib/app; barrel src/schemas/index.ts still exports MatchResult by name (no break)."
+  },
+  "review_summary": {
+    "fake_detection": "REAL_IMPL (CRITICAL check PASSED) — all ranking + availability reasoning routes through callClaude at complexity:'hard' (route.ts->Opus via lib/ai/route.ts) EXACTLY ONCE per search (asserted by S3-P1-02/P3-06 toHaveBeenCalledTimes(1)). Ranking rules (availability-over-skills, VERIFIED>MANAGER_APPROVED>SELF_REPORTED trust weighting, §2.5 output contract) + the serialized dataset live in cacheableContext (the cached `system` breakpoint, claude.ts:118); the per-request query is the only thing in the user turn. NO date arithmetic, NO keyword matching, NO in-code ranking anywhere in lib/match/ or app/api/match/ — the only sort() calls are localeCompare for DETERMINISTIC SERIALIZATION (cache + loop reuse), not ranking, and 'weeks'/'free now' literals appear only inside RANKING_RULES_PROMPT text (the model's instructions). Route's default Claude client is a typed-failure stub `createMessage: () => Promise.reject(NO_LIVE_CLIENT)` -> core returns the exact AC-06 retry message with shortlist undefined, never a fabricated ranking (BR-09 intact).",
+    "ac_adherence": "AC-04 availability-aware ranked match: runStaffingSearch maps validated results->shortlist; S3-P3-01 proves availability (rank/inRequestedWindow), not match% (equal), drives ordering. AC-05 hard match: never-empty + explicit gaps enforced by prompt + S3-P3-02. AC-21 partial-quantity: shortfallNote preserved through {shortlist}->{results} coercion + S3-P3-03. AC-06 failure: exact 'Search is temporarily unavailable — please retry.' on sdk-throw AND garbled-JSON parse failure (S3-P3-04/05), no partial ranking. AC-11/BR-03 role scope: EMPLOYEE denied at buildMatchDataset BEFORE any model call (S3-P2-02/P4-01), PL team-scoped (S3-P2-01), unknown role -> empty (never org-wide).",
+    "architecture": "MatchResult = §2.5 fields + documented optional rank/inRequestedWindow (TADR-S3-02), wrapped in z.preprocess(coerceModelShape, z.object(...)) per TADR-S3-05 — coercion canonicalizes array|{shortlist}|{results} ENCODINGS only; the inner entry-level z.object (matchPercent 0..100, required fields) is UNCHANGED and S3-P1-01 proves it still rejects out-of-range and the legacy {matches} stub. Caching per §2.3/BR-12. Read-only POST /api/match per TS-003/ADR-006 (no DB writes; dataset builder read-only Prisma select). Single Claude boundary per ADR-003/BR-09. Opus routing via complexity:'hard' (BR-12, S3-P3-06 asserts /opus/i model id). All 5 tactical ADRs (S3-01..05) implemented as specified; no stale-ADR divergence.",
+    "br_implementation": "BR-03 role scope (ADMIN/MANAGER->org, PL->team, EMPLOYEE denied; no HR token per F-04) verified against schema.prisma role/leadId. BR-04 availability reasoning is in the prompt, not code. BR-05 every entry carries matchPercent/matchedSkills/gaps/availability/rationale + never-empty + shortfallNote. BR-09 Zod-validated single boundary, no keyword/date substitute. BR-12 Opus + prompt caching of system+dataset, deterministic serialization.",
+    "security": "Read-only transport, no DB writes. Deny-by-default role gate fires before the model call; unknown roles resolve to an empty dataset (never org-wide leak). PII-safe: toCoreRecord drops handle/currentProject/email/name — only profileId, skill name, trustState, seniority, timezone, allocation, freeFrom are serialized. claude.ts log() emits only requestId/promptName/model/ok/reason (no raw model text, no PII). Synthetic-only fixtures. No secrets; model ids come from env with safe defaults.",
+    "reuse_and_scope": "Reuses SKILL-1 callClaude boundary, route() Opus routing, prisma db, and the test-helper Claude doubles unchanged; follows the SKILL-2 cert precedent (pure core + thin transport). No UI built (correct — UI is SKILL-6 scope). No dead code, no gold-plating, no scope creep. getCallerSession() is an explicit auth seam stubbed to MANAGER with a TODO(SKILL-6) per the story's deferral assumption — a deferred boundary, not faked intelligence.",
+    "data_freshness_types_logic": "DATA path is read-only (a search; no mutation -> no refetch/invalidate concern). TYPE_COMPLETE: result.data.results typed via MatchResult inference; data.shortfallNote conditionally spread (no ?? masking a missing field). LOGIC: failure branch returns typed {ok:false}; deterministic serialization is round-trip stable (S3-P2-03 byte-identical); empty-PL-team yields [] not a throw (S3-P2-04)."
+  },
+  "artifacts_created": [],
+  "built_from": {
+    "story": "SKILL-3/STORY.md",
+    "acceptance_criteria": "AC-04/05/06/21 + AC-11 (STORY Gherkin)",
+    "target_state_arch": "Pages 02/03/05 (v1)",
+    "business_rules": "BR-03/04/05/09/12",
+    "tactical_adrs": "iter-3 (S3-01..05)",
+    "implementation_plan": "iter-3",
+    "commit_reviewed": "dcd9207 (GREEN) / b9d4844 (RED) over b5351fe"
+  },
+  "metadata": {
+    "pipeline_stage": "08-implementation",
+    "model": "claude-opus-4-8[1m]",
+    "review_type": "clean-slate per-jira reviewer (iteration 2, no anchoring on prior approval)"
+  }
+}
